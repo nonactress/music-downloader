@@ -71,6 +71,14 @@ export interface CreateExportResponse {
   exportId: string
 }
 
+/** CONTRACT 2-4 */
+export interface Peaks {
+  trackId: string
+  durationSec: number
+  pointsPerSecond: number
+  peaks: number[]
+}
+
 export interface EditTrack {
   sourceId: string
   start: number

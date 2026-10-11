@@ -134,4 +134,16 @@ export const mockApi: Api = {
 
   downloadUrl: () => silentWavUrl(),
   audioUrl: () => silentWavUrl(),
+
+  async getPeaks(trackId) {
+    await wait(200)
+    const track = tracks.get(trackId)
+    if (!track) {
+      throw new ApiError({ code: 'NOT_FOUND', message: '노래를 찾을 수 없어요. 처음부터 다시 해주세요.' }, 404)
+    }
+    const pointsPerSecond = 20
+    const n = Math.ceil(track.durationSec * pointsPerSecond)
+    const peaks = Array.from({ length: n }, (_, i) => 0.15 + 0.7 * Math.abs(Math.sin(i / 9) * Math.cos(i / 31)))
+    return { trackId, durationSec: track.durationSec, pointsPerSecond, peaks }
+  },
 }
