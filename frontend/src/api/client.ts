@@ -3,6 +3,7 @@ import type {
   CreateTrackResponse,
   EditJson,
   Job,
+  Peaks,
 } from './types'
 import { ApiError, FALLBACK_ERROR } from './errors'
 import { mockApi } from './mock'
@@ -32,6 +33,7 @@ export interface Api {
   createExport(edit: EditJson): Promise<CreateExportResponse>
   downloadUrl(exportId: string): string
   audioUrl(trackId: string): string
+  getPeaks(trackId: string): Promise<Peaks>
 }
 
 const httpApi: Api = {
@@ -43,6 +45,7 @@ const httpApi: Api = {
   downloadUrl: (exportId) =>
     `${BASE}/exports/${encodeURIComponent(exportId)}/download`,
   audioUrl: (trackId) => `${BASE}/tracks/${encodeURIComponent(trackId)}/audio`,
+  getPeaks: (trackId) => request(`/tracks/${encodeURIComponent(trackId)}/peaks`),
 }
 
 /** 백엔드 없이 화면을 볼 때: `npm run dev:mock` */

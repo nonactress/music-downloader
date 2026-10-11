@@ -234,3 +234,50 @@ a:hover { color: var(--c-primary-hover); }
 }
 .song-card__edit { display: flex; flex-wrap: wrap; gap: 10px; }
 .song-card__btn { height: var(--h-btn); padding: 0 22px; gap: 10px; border-radius: 14px; font-size: 21px; }
+
+/* ── ④ 한 곡 잘라내기 ──────────────────── */
+.back-btn {
+  align-self: flex-start; height: var(--h-btn); padding: 0 20px; gap: 10px; border-radius: 12px; font-size: 20px;
+}
+.trim { width: 100%; max-width: 1200px; margin: 0 auto; padding: 28px 40px 40px; display: flex; flex-direction: column; gap: 24px; flex: 1; }
+.trim__head { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; }
+.trim__num {
+  width: 56px; height: 56px; border-radius: 50%; background: var(--c-text); color: #fff; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 700;
+}
+.trim__titles { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.trim__h1 { margin: 0; font-size: 34px; font-weight: 700; }
+.trim__sub { font-size: 20px; color: var(--c-text-sub); overflow-wrap: anywhere; }
+.trim__panel {
+  padding: 32px; border-radius: 20px; background: var(--c-surface); border: 2px solid var(--c-line);
+  display: flex; flex-direction: column; gap: 28px;
+}
+.trim__guide { margin: 0; font-size: 22px; line-height: 1.5; }
+
+.wave { position: relative; height: 160px; border-radius: 14px; background: #f0f0ec; overflow: hidden; }
+.wave__bars { position: absolute; inset: 24px 0; z-index: 0; }
+.wave__keep {
+  position: absolute; top: 0; bottom: 0; z-index: 1; background: rgba(31, 79, 184, 0.16);
+  border-left: 6px solid var(--c-primary); border-right: 6px solid var(--c-primary);
+}
+.wave__handle { position: absolute; z-index: 2; top: 56px; width: 36px; height: 48px; border-radius: 8px; background: var(--c-primary); }
+
+.trim__steppers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+.stepper { padding: 20px; border-radius: 16px; background: var(--c-bg); display: flex; flex-direction: column; gap: 14px; align-items: center; }
+.stepper__label { font-size: 22px; font-weight: 700; }
+.stepper__row { display: flex; align-items: center; gap: 16px; }
+.stepper__btn {
+  width: 104px; height: var(--h-btn-md); border: 2px solid var(--c-text); border-radius: 14px;
+  background: var(--c-surface); font-size: 20px; font-weight: 700;
+}
+.stepper__btn:disabled { border-color: #c4c4bf; background: #f0f0ec; color: #8a8a86; }
+.stepper__value { min-width: 120px; text-align: center; font-size: 40px; font-weight: 700; }
+
+.trim__result { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; }
+.trim__remain { font-size: 22px; }
+.trim__remain b { font-size: 26px; }
+.trim__hint { font-size: 20px; color: var(--c-text-sub); }
+.trim__play { height: var(--h-btn-lg); padding: 0 26px; gap: 10px; border-radius: 14px; font-size: 21px; }
+.trim__footer { margin-top: auto; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; }
+.trim__cancel { height: var(--h-btn); }
+.trim__done { height: var(--h-cta-sm); padding: 0 44px; gap: 12px; border-radius: 18px; font-size: 24px; }

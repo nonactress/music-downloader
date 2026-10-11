@@ -5,6 +5,7 @@ import { LoadingPage } from './pages/LoadingPage'
 import { DonePage } from './pages/DonePage'
 import { EditPage } from './pages/EditPage'
 import { SavingPage } from './pages/SavingPage'
+import { TrimPage } from './pages/TrimPage'
 
 const TITLES = {
   import: '노래 가져오기',
@@ -25,6 +26,7 @@ export function App() {
 
   if (screen === 'loading') return <LoadingPage />
   if (screen === 'edit') return <EditPage />
+  if (screen === 'trim') return <TrimPage />
   if (screen === 'saving') return <SavingPage />
   if (screen === 'done') return <DonePage />
   return <ImportPage />
