@@ -378,3 +378,12 @@ a:hover { color: var(--c-primary-hover); }
 .append__btn { flex: 1 1 180px; height: var(--h-btn-md); border-radius: 14px; font-size: 21px; }
 .append__btn:disabled { border-color: #c4c4bf; background: #f0f0ec; color: #8a8a86; }
 .append__full { margin: 0; font-size: 20px; font-weight: 600; color: var(--c-text-sub); }
+
+/* 카드 [위로] [아래로] [빼기] (결정 38) */
+.song-card__order { display: flex; flex-wrap: wrap; gap: 8px; }
+.order-btn {
+  height: var(--h-btn); padding: 0 16px; border: 2px solid var(--c-text); border-radius: 12px;
+  background: var(--c-surface); font-size: 20px; font-weight: 600;
+}
+.order-btn--danger { border-color: var(--c-danger); color: var(--c-danger); }
+.order-btn:disabled { border-color: #c4c4bf; background: #f0f0ec; color: #8a8a86; }

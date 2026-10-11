@@ -74,3 +74,15 @@ export async function routeAudio(page: Page, seconds = 225) {
   const body = silentWav(seconds)
   await page.route('**/api/tracks/*/audio', (r) => r.fulfill({ status: 200, contentType: 'audio/wav', body }))
 }
+
+export const track2 = { trackId: 't2', title: '[두 번째 노래 제목]', channel: '[채널]', durationSec: 240, thumbnailUrl: '' }
+
+/** ③에서 2번 노래(track2)를 붙여 2곡으로 만든다 */
+export async function appendSecond(page: Page, t = track2) {
+  await page.route('**/api/tracks', (r) => json(r, { jobId: 'j3', trackId: t.trackId }, 202))
+  await page.route('**/api/jobs/j3', (r) =>
+    json(r, { jobId: 'j3', kind: 'extract', status: 'done', progress: 100, etaSeconds: 0, track: t, result: { track: t }, error: null }))
+  await page.getByLabel('노래 하나 더 붙이기').fill('https://youtu.be/second')
+  await page.getByRole('button', { name: '불러와서 붙이기' }).click()
+  await page.getByRole('article', { name: '2번 노래' }).waitFor()
+}
