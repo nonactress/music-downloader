@@ -351,3 +351,13 @@ a:hover { color: var(--c-primary-hover); }
 .page-head { display: flex; flex-direction: column; gap: 4px; }
 .page-head__h1 { margin: 0; font-size: 34px; font-weight: 700; }
 .page-head__sub { font-size: 20px; color: var(--c-text-sub); }
+
+/* ⑥ 덮어쓰기 경고 (결정 30) */
+.warn-box {
+  display: flex; align-items: flex-start; gap: 14px; padding: 18px 22px; border-radius: 14px;
+  background: #fff4e5; border: 2px solid #b4530a;
+}
+.warn-box svg { flex-shrink: 0; margin-top: 2px; }
+.warn-box__body { display: flex; flex-direction: column; gap: 4px; }
+.warn-box__title { font-size: 21px; font-weight: 700; }
+.warn-box__line { font-size: 20px; line-height: 1.5; }

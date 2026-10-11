@@ -5,6 +5,7 @@ import { LoadingPage } from './pages/LoadingPage'
 import { DonePage } from './pages/DonePage'
 import { EditPage } from './pages/EditPage'
 import { SavingPage } from './pages/SavingPage'
+import { SpeedAllPage } from './pages/SpeedAllPage'
 import { SpeedPage } from './pages/SpeedPage'
 import { TrimPage } from './pages/TrimPage'
 
@@ -28,8 +29,8 @@ export function App() {
   }, [screen])
 
   if (screen === 'loading') return <LoadingPage />
-  // 모든 노래 빠르기 화면은 F15에서 연결 — 그 전까지는 편집 홈
-  if (screen === 'edit' || screen === 'speedAll') return <EditPage />
+  if (screen === 'edit') return <EditPage />
+  if (screen === 'speedAll') return <SpeedAllPage />
   if (screen === 'speed') return <SpeedPage />
   if (screen === 'trim') return <TrimPage />
   if (screen === 'saving') return <SavingPage />
