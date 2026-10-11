@@ -1,10 +1,10 @@
 // 노래 카드 — docs/wireframes/html/Edit.html
-// 2단계 범위: [빠르기] · [위로][아래로][빼기]는 숨김 (결정 17)
+// 3단계 범위: [위로][아래로][빼기]는 4단계까지 숨김 (결정 17 · 32)
 import type { EditTrack, TrackInfo } from '../api/types'
 import { formatKoreanDuration } from '../lib/format'
 import { speedLabel, trimLabel } from '../lib/labels'
 import { trackDuration, trimState } from '../store/editStore'
-import { PauseIcon, PlayIcon, ScissorsIcon } from './Icons'
+import { GaugeIcon, PauseIcon, PlayIcon, ScissorsIcon } from './Icons'
 
 interface Props {
   index: number
@@ -14,9 +14,10 @@ interface Props {
   playing: boolean
   onPlay: () => void
   onTrim: () => void
+  onSpeed: () => void
 }
 
-export function SongCard({ index, track, info, justChanged, playing, onPlay, onTrim }: Props) {
+export function SongCard({ index, track, info, justChanged, playing, onPlay, onTrim, onSpeed }: Props) {
   const normalSpeed = speedLabel(track.speed) === '보통 빠르기'
   return (
     <article className={`song-card${justChanged ? ' song-card--changed' : ''}`} aria-label={`${index + 1}번 노래`}>
@@ -48,6 +49,10 @@ export function SongCard({ index, track, info, justChanged, playing, onPlay, onT
           <button type="button" className="btn-primary song-card__btn" onClick={onTrim}>
             <ScissorsIcon />
             잘라내기
+          </button>
+          <button type="button" className="btn-primary song-card__btn" onClick={onSpeed}>
+            <GaugeIcon />
+            빠르기
           </button>
         </div>
       </div>

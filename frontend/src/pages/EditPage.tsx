@@ -1,12 +1,12 @@
 // ③ 편집 홈 — docs/wireframes/html/Edit.html
-// 2단계 범위: [빠르기], [위로][아래로][빼기], 노래 하나 더 붙이기, "모든 노래에 한 번에 적용"은 숨김 (결정 17)
+// 3단계 범위 (결정 32): [위로][아래로][빼기], 노래 하나 더 붙이기, 부드럽게 잇기 · 소리 크기 체크는 숨김 (결정 17)
 import { useEffect, useState } from 'react'
 import { api } from '../api/client'
 import { toUserMessage } from '../api/errors'
 import type { EditTrack } from '../api/types'
 import { ChangeNotice } from '../components/ChangeNotice'
 import { ErrorBox } from '../components/ErrorBox'
-import { ArrowRightIcon, PauseIcon, PlayIcon } from '../components/Icons'
+import { ArrowRightIcon, GaugeIcon, GridIcon, PauseIcon, PlayIcon } from '../components/Icons'
 import { Page } from '../components/Page'
 import { SongCard } from '../components/SongCard'
 import { formatKoreanDuration } from '../lib/format'
@@ -30,6 +30,8 @@ export function EditPage() {
   const lastChange = useEditStore(selectLastChange)
   const goImport = useFlowStore((s) => s.goImport)
   const openTrim = useFlowStore((s) => s.openTrim)
+  const openSpeed = useFlowStore((s) => s.openSpeed)
+  const openSpeedAll = useFlowStore((s) => s.openSpeedAll)
   const startSaving = useFlowStore((s) => s.startSaving)
   const playingKey = usePreview((s) => s.playingKey)
   const togglePreview = usePreview((s) => s.toggle)
@@ -91,17 +93,44 @@ export function EditPage() {
                 index={i}
                 track={t}
                 info={info}
-                justChanged={lastChange?.trackIndex === i}
+                justChanged={!!lastChange && (lastChange.allTracks || lastChange.trackIndex === i)}
                 playing={playingKey === key}
                 onPlay={() => togglePreview(key, [toSegment(t)])}
                 onTrim={() => {
                   usePreview.getState().stop()
                   openTrim(i)
                 }}
+                onSpeed={() => {
+                  usePreview.getState().stop()
+                  openSpeed(i)
+                }}
               />
             )
           })}
         </div>
+
+        <section className="apply-all" aria-labelledby="apply-all-title">
+          <h2 className="apply-all__title" id="apply-all-title">
+            <GridIcon />
+            모든 노래에 한 번에 적용
+          </h2>
+          <div className="apply-all__row">
+            <button
+              type="button"
+              className="apply-all__tile"
+              onClick={() => {
+                usePreview.getState().stop()
+                openSpeedAll(null)
+              }}
+            >
+              <GaugeIcon size={30} />
+              <span className="apply-all__text">
+                <span className="apply-all__name">모든 노래 빠르기 바꾸기</span>
+                <span className="apply-all__sub">전체를 같은 빠르기로</span>
+              </span>
+            </button>
+          </div>
+        </section>
 
         {saveError && <ErrorBox message={saveError} />}
 

@@ -14,7 +14,7 @@ import { isSameEdit, trackDuration, trimState, useEditStore } from '../store/edi
 import { useFlowStore } from '../store/flowStore'
 
 export function TrimPage() {
-  const index = useFlowStore((s) => s.trimIndex)
+  const index = useFlowStore((s) => s.songIndex)
   const goEdit = useFlowStore((s) => s.goEdit)
   const edit = useEditStore((s) => s.edit)
   const trackInfo = useEditStore((s) => s.trackInfo)
@@ -66,17 +66,17 @@ export function TrimPage() {
 
   return (
     <Page step={2} minHeight={1000}>
-      <main className="trim">
+      <main className="song-screen">
         <button type="button" className="btn-outline back-btn" onClick={finish}>
           <ArrowLeftIcon />
           노래 목록으로
         </button>
 
-        <div className="trim__head">
-          <div className="trim__num" aria-hidden="true">{n}</div>
-          <div className="trim__titles">
-            <h1 className="trim__h1">{n}번 노래 잘라내기</h1>
-            <div className="trim__sub">
+        <div className="song-screen__head">
+          <div className="song-screen__num" aria-hidden="true">{n}</div>
+          <div className="song-screen__titles">
+            <h1 className="song-screen__h1">{n}번 노래 잘라내기</h1>
+            <div className="song-screen__sub">
               {info.title} · 원래 길이 {formatKoreanDuration(info.durationSec)}
             </div>
           </div>
@@ -115,7 +115,7 @@ export function TrimPage() {
             </div>
             <button
               type="button"
-              className="btn-outline trim__play"
+              className="btn-outline song-screen__play"
               aria-pressed={playingKey === 'trim'}
               onClick={() =>
                 togglePreview('trim', [
@@ -135,7 +135,7 @@ export function TrimPage() {
           </div>
         </section>
 
-        <div className="trim__footer">
+        <div className="song-screen__footer">
           <button
             type="button"
             className="text-btn trim__cancel"
@@ -145,7 +145,7 @@ export function TrimPage() {
             <UndoIcon />
             이 노래 자르기 취소
           </button>
-          <button type="button" className="btn-primary trim__done" onClick={finish}>
+          <button type="button" className="btn-primary song-screen__done" onClick={finish}>
             <CheckIcon size={26} />
             완료, 목록으로
           </button>
