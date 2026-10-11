@@ -3,7 +3,8 @@ import os
 from pathlib import Path
 
 REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
-DATA_DIR = Path(os.environ.get("DATA_DIR", "./data"))
+# 기본값은 실행 위치와 상관없이 backend/data (API · worker가 같은 곳을 보게). Docker는 /data
+DATA_DIR = Path(os.environ.get("DATA_DIR") or Path(__file__).resolve().parents[1] / "data")
 FILE_TTL_HOURS = float(os.environ.get("FILE_TTL_HOURS", "24"))
 FILE_TTL_SEC = int(FILE_TTL_HOURS * 3600)
 MAX_DURATION_SEC = float(os.environ.get("MAX_DURATION_SEC", "1200"))  # 20분
