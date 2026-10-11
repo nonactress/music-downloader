@@ -3,12 +3,14 @@ import { expect, test } from '@playwright/test'
 
 test.skip(!process.env.LIVE, 'LIVE=1일 때만')
 
-test('실제 백엔드: 주소 → 불러오기 → 저장 완료 → 다운로드', async ({ page }) => {
+test('실제 백엔드: 주소 → 불러오기 → 편집 홈 → 저장 완료 → 다운로드', async ({ page }) => {
   test.setTimeout(180_000)
   await page.goto('/')
   await page.getByLabel('유튜브 주소').fill('https://www.youtube.com/watch?v=jNQXAC9IVRw')
   await page.getByRole('button', { name: '노래 불러오기' }).click()
   await expect(page.getByText(/% 완료/)).toBeVisible()
+  await expect(page.getByRole('heading', { name: '노래를 다듬어 주세요' })).toBeVisible({ timeout: 120_000 })
+  await page.getByRole('button', { name: '다 됐어요, 저장하기' }).click()
   await expect(page.getByRole('heading', { name: '노래가 완성됐어요!' })).toBeVisible({ timeout: 170_000 })
   await expect(page.getByText(/노래 1곡 · \d+초 · [\d.]+(MB|KB)/)).toBeVisible()
 
