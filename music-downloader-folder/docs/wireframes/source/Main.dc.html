@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>노래 가져오기</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+button,input{font-family:inherit}
+a{color:#1F4FB8}a:hover{color:#163A88}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 960px; background: #F7F7F5; color: #1A1A1A; font-family: 'IBM Plex Sans KR', sans-serif; display: flex; flex-direction: column;">
+  <header style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 40px; background: #FFFFFF; border-bottom: 2px solid #E2E2DE;">
+    <div style="font-size: 26px; font-weight: 700;">쉬운 음악 만들기</div>
+    <nav aria-label="진행 단계" style="display: flex; flex-wrap: wrap; gap: 8px;">
+      <div style="display: flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 999px; background: {{accent}}; color: #FFFFFF; font-size: 19px; font-weight: 700;"><span style="width: 28px; height: 28px; border-radius: 50%; background: #FFFFFF; color: {{accent}}; display: flex; align-items: center; justify-content: center; font-size: 16px;">1</span>노래 가져오기</div>
+      <div style="display: flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 999px; background: #ECECE8; color: #5A5A57; font-size: 19px; font-weight: 600;"><span style="width: 28px; height: 28px; border-radius: 50%; background: #D0D0CB; display: flex; align-items: center; justify-content: center; font-size: 16px;">2</span>노래 다듬기</div>
+      <div style="display: flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 999px; background: #ECECE8; color: #5A5A57; font-size: 19px; font-weight: 600;"><span style="width: 28px; height: 28px; border-radius: 50%; background: #D0D0CB; display: flex; align-items: center; justify-content: center; font-size: 16px;">3</span>저장하기</div>
+    </nav>
+    <div style="display: flex; gap: 10px;">
+      <button style="height: 52px; padding: 0 18px; border: 2px solid #1A1A1A; border-radius: 12px; background: #FFFFFF; font-size: 19px; font-weight: 600;">가+ 글자 크게</button>
+      <button style="height: 52px; padding: 0 18px; border: 2px solid #1A1A1A; border-radius: 12px; background: #FFFFFF; font-size: 19px; font-weight: 600;">도움말</button>
+    </div>
+  </header>
+
+  <main style="width: 100%; max-width: 960px; margin: 0 auto; box-sizing: border-box; padding: 64px 40px; display: flex; flex-direction: column; gap: 28px;">
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <h1 style="margin: 0; font-size: 44px; font-weight: 700;">유튜브 주소를 넣어주세요</h1>
+      <p style="margin: 0; font-size: 22px; color: #4A4A48;">주소를 넣고 [노래 불러오기]를 누르면 노래를 가져와요.</p>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <label for="url" style="font-size: 22px; font-weight: 600;">유튜브 주소</label>
+      <div style="display: flex; flex-wrap: wrap; gap: 12px;">
+        <input id="url" placeholder="여기를 눌러 주소를 넣으세요" style="flex: 999 1 420px; min-width: 0; height: 80px; box-sizing: border-box; padding: 0 22px; border: 3px solid #1A1A1A; border-radius: 16px; background: #FFFFFF; font-size: 22px;">
+        <button style="flex: 1 1 200px; height: 80px; display: flex; align-items: center; justify-content: center; gap: 10px; border: 2px solid #1A1A1A; border-radius: 16px; background: #FFFFFF; font-size: 21px; font-weight: 600; color: #1A1A1A;">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="3" width="8" height="4" rx="1"></rect><path d="M16 5h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h2"></path></svg>
+          붙여넣기
+        </button>
+      </div>
+    </div>
+
+    <a href="Loading.dc.html" style="height: 88px; display: flex; align-items: center; justify-content: center; border-radius: 18px; background: {{accent}}; color: #FFFFFF; font-size: 28px; font-weight: 700; text-decoration: none;">노래 불러오기</a>
+
+    <section style="margin-top: 16px; padding: 28px; border-radius: 20px; background: #EAEAE6; display: flex; flex-direction: column; gap: 18px;">
+      <h2 style="margin: 0; font-size: 24px; font-weight: 700;">유튜브 주소는 어디서 찾나요?</h2>
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px;">
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <div style="height: 120px; border-radius: 12px; background: #D0D0CB; display: flex; align-items: center; justify-content: center; font-size: 16px; color: #555;">[화면 그림 1]</div>
+          <div style="font-size: 20px;"><b>1.</b> 유튜브에서 노래 영상을 열어요</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <div style="height: 120px; border-radius: 12px; background: #D0D0CB; display: flex; align-items: center; justify-content: center; font-size: 16px; color: #555;">[화면 그림 2]</div>
+          <div style="font-size: 20px;"><b>2.</b> 맨 위 주소창을 한 번 눌러요</div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <div style="height: 120px; border-radius: 12px; background: #D0D0CB; display: flex; align-items: center; justify-content: center; font-size: 16px; color: #555;">[화면 그림 3]</div>
+          <div style="font-size: 20px;"><b>3.</b> 마우스 오른쪽 → [복사]</div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#1F4FB8","options":["#1F4FB8","#1A1A1A","#B4530A"]},"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { accent: this.props.accent ?? '#1F4FB8' };
+  }
+}
+</script>
+</body>
+</html>

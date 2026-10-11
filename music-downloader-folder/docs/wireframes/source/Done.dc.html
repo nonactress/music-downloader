@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>저장 완료</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+button{font-family:inherit}
+a{color:#1F4FB8}a:hover{color:#163A88}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 960px; background: #F7F7F5; color: #1A1A1A; font-family: 'IBM Plex Sans KR', sans-serif; display: flex; flex-direction: column;">
+  <header style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 40px; background: #FFFFFF; border-bottom: 2px solid #E2E2DE;">
+    <div style="font-size: 26px; font-weight: 700;">쉬운 음악 만들기</div>
+    <nav aria-label="진행 단계" style="display: flex; flex-wrap: wrap; gap: 8px;">
+      <div style="display: flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 999px; background: #E3EAF8; color: #1F4FB8; font-size: 19px; font-weight: 600;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg>노래 가져오기</div>
+      <div style="display: flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 999px; background: #E3EAF8; color: #1F4FB8; font-size: 19px; font-weight: 600;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg>노래 다듬기</div>
+      <div style="display: flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 999px; background: #1F4FB8; color: #FFFFFF; font-size: 19px; font-weight: 700;"><span style="width: 28px; height: 28px; border-radius: 50%; background: #FFFFFF; color: #1F4FB8; display: flex; align-items: center; justify-content: center; font-size: 16px;">3</span>저장하기</div>
+    </nav>
+    <div style="display: flex; gap: 10px;">
+      <button style="height: 52px; padding: 0 18px; border: 2px solid #1A1A1A; border-radius: 12px; background: #FFFFFF; font-size: 19px; font-weight: 600;">가+ 글자 크게</button>
+      <button style="height: 52px; padding: 0 18px; border: 2px solid #1A1A1A; border-radius: 12px; background: #FFFFFF; font-size: 19px; font-weight: 600;">도움말</button>
+    </div>
+  </header>
+
+  <main style="width: 100%; max-width: 860px; margin: 0 auto; box-sizing: border-box; padding: 64px 40px; display: flex; flex-direction: column; align-items: center; gap: 28px;">
+    <div style="width: 112px; height: 112px; border-radius: 50%; background: #E3EAF8; display: flex; align-items: center; justify-content: center;">
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#1F4FB8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="완료"><path d="M5 12l5 5L20 7"></path></svg>
+    </div>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+      <h1 style="margin: 0; font-size: 44px; font-weight: 700;">노래가 완성됐어요!</h1>
+      <p style="margin: 0; font-size: 22px; color: #4A4A48;">아래 큰 버튼을 누르면 내 컴퓨터에 저장돼요.</p>
+    </div>
+
+    <div style="width: 100%; box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: center; gap: 20px; padding: 24px; border-radius: 18px; background: #FFFFFF; border: 2px solid #E2E2DE;">
+      <div style="width: 64px; height: 64px; border-radius: 14px; background: #ECECE8; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+      </div>
+      <div style="flex: 999 1 260px; min-width: 0; display: flex; flex-direction: column; gap: 4px;">
+        <div style="font-size: 24px; font-weight: 700;">내 노래_1011.mp3</div>
+        <div style="font-size: 19px; color: #4A4A48;">노래 2곡 · 6분 20초 · [파일 크기]</div>
+      </div>
+      <button style="height: 60px; padding: 0 22px; display: flex; align-items: center; gap: 8px; border: 2px solid #1A1A1A; border-radius: 14px; background: #FFFFFF; font-size: 20px; font-weight: 700;"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4v16l13-8z"></path></svg>들어보기</button>
+    </div>
+
+    <button style="width: 100%; height: 92px; display: flex; align-items: center; justify-content: center; gap: 14px; border: none; border-radius: 20px; background: #1F4FB8; color: #FFFFFF; font-size: 28px; font-weight: 700;">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M6 11l6 6 6-6M4 21h16"></path></svg>
+      내 컴퓨터에 저장하기
+    </button>
+
+    <a href="#" style="font-size: 20px; font-weight: 600;">저장한 노래는 어디서 찾나요?</a>
+
+    <div style="width: 100%; display: flex; flex-wrap: wrap; gap: 12px;">
+      <a href="Edit.dc.html" style="flex: 1 1 240px; height: 68px; display: flex; align-items: center; justify-content: center; border: 2px solid #1A1A1A; border-radius: 16px; background: #FFFFFF; color: #1A1A1A; font-size: 21px; font-weight: 700; text-decoration: none;">다시 고치러 가기</a>
+      <a href="Main.dc.html" style="flex: 1 1 240px; height: 68px; display: flex; align-items: center; justify-content: center; border: 2px solid #1A1A1A; border-radius: 16px; background: #FFFFFF; color: #1A1A1A; font-size: 21px; font-weight: 700; text-decoration: none;">새 노래 만들기</a>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

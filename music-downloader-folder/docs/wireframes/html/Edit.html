@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>편집 홈 — 노래 목록</title>
+
+</head>
+<body>
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+button,input{font-family:inherit}
+</style>
+
+<div style="width: 100%; min-height: 1240px; background: #F7F7F5; color: #1A1A1A; font-family: 'IBM Plex Sans KR', 'Noto Sans CJK KR', sans-serif; display: flex; flex-direction: column;">
+  <header style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 40px; background: #FFFFFF; border-bottom: 2px solid #E2E2DE;">
+    <div style="font-size: 26px; font-weight: 700;">쉬운 음악 만들기</div>
+    <nav aria-label="진행 단계" style="display: flex; flex-wrap: wrap; gap: 8px;">
+      <div style="display: flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 999px; background: #E3EAF8; color: #1F4FB8; font-size: 19px; font-weight: 600;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg>노래 가져오기</div>
+      <div style="display: flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 999px; background: #1F4FB8; color: #FFFFFF; font-size: 19px; font-weight: 700;"><span style="width: 28px; height: 28px; border-radius: 50%; background: #FFFFFF; color: #1F4FB8; display: flex; align-items: center; justify-content: center; font-size: 16px;">2</span>노래 다듬기</div>
+      <div style="display: flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 999px; background: #ECECE8; color: #5A5A57; font-size: 19px; font-weight: 600;"><span style="width: 28px; height: 28px; border-radius: 50%; background: #D0D0CB; display: flex; align-items: center; justify-content: center; font-size: 16px;">3</span>저장하기</div>
+    </nav>
+    <div style="display: flex; gap: 10px;">
+      <button style="height: 52px; padding: 0 18px; border: 2px solid #1A1A1A; border-radius: 12px; background: #FFFFFF; font-size: 19px; font-weight: 600;">가+ 글자 크게</button>
+      <button style="height: 52px; padding: 0 18px; border: 2px solid #1A1A1A; border-radius: 12px; background: #FFFFFF; font-size: 19px; font-weight: 600;">도움말</button>
+    </div>
+  </header>
+
+  <main style="width: 100%; max-width: 1200px; margin: 0 auto; box-sizing: border-box; padding: 32px 40px 40px; display: flex; flex-direction: column; gap: 22px; flex: 1;">
+    <div role="status" style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 20px; border-radius: 14px; background: #E3EAF8; border: 2px solid #1F4FB8;">
+      <div style="display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 600;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1F4FB8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"></path></svg>2번 노래 빠르기를 <b>빠르게(1.25배)</b>로 바꿨어요</div>
+      <button style="height: 52px; padding: 0 20px; border: 2px solid #1F4FB8; border-radius: 12px; background: #FFFFFF; color: #1F4FB8; font-size: 19px; font-weight: 700;">되돌리기</button>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 6px;">
+      <h1 style="margin: 0; font-size: 36px; font-weight: 700;">노래를 다듬어 주세요</h1>
+      <p style="margin: 0; font-size: 21px; color: #4A4A48;">고치고 싶은 노래의 버튼을 누르세요. 노래는 위에서부터 순서대로 이어져요.</p>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 14px;">
+      <article style="padding: 20px 22px; border-radius: 18px; background: #FFFFFF; border: 2px solid #D6D6D2; display: flex; flex-direction: column; gap: 16px;">
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 18px;">
+          <div style="width: 52px; height: 52px; border-radius: 50%; background: #1A1A1A; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700; flex-shrink: 0;">1</div>
+          <div style="width: 112px; height: 63px; border-radius: 8px; background: #D0D0CB; flex-shrink: 0;"></div>
+          <div style="flex: 999 1 240px; min-width: 0; display: flex; flex-direction: column; gap: 2px;">
+            <div style="font-size: 23px; font-weight: 700;">[첫 번째 노래 제목]</div>
+            <div style="font-size: 19px; color: #4A4A48;">3분 8초 (앞뒤 잘라냄) · 보통 빠르기</div>
+          </div>
+          <button style="height: 56px; padding: 0 18px; display: flex; align-items: center; gap: 8px; border: 2px solid #1A1A1A; border-radius: 12px; background: #FFFFFF; font-size: 19px; font-weight: 700;"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4v16l13-8z"></path></svg>들어보기</button>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; padding-top: 14px; border-top: 2px solid #ECECE8;">
+          <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+            <a href="Trim.html" style="height: 60px; padding: 0 22px; display: flex; align-items: center; gap: 10px; border-radius: 14px; background: #1F4FB8; color: #FFFFFF; font-size: 21px; font-weight: 700; text-decoration: none;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M20 4 8.1 15.9M14.5 14.5 20 20M8.1 8.1 12 12"></path></svg>잘라내기</a>
+            <a href="Speed.html" style="height: 60px; padding: 0 22px; display: flex; align-items: center; gap: 10px; border-radius: 14px; background: #1F4FB8; color: #FFFFFF; font-size: 21px; font-weight: 700; text-decoration: none;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 14l4-4"></path><path d="M3.3 19a10 10 0 1 1 17.4 0"></path></svg>빠르기</a>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+            <button disabled style="height: 60px; padding: 0 16px; border: 2px solid #C4C4BF; border-radius: 12px; background: #F0F0EC; font-size: 18px; font-weight: 600; color: #8A8A86;">위로</button>
+            <button style="height: 60px; padding: 0 16px; border: 2px solid #1A1A1A; border-radius: 12px; background: #FFFFFF; font-size: 18px; font-weight: 600;">아래로</button>
+            <button style="height: 60px; padding: 0 16px; border: 2px solid #B42318; border-radius: 12px; background: #FFFFFF; font-size: 18px; font-weight: 600; color: #B42318;">빼기</button>
+          </div>
+        </div>
+      </article>
+
+      <article style="padding: 20px 22px; border-radius: 18px; background: #FFFFFF; border: 3px solid #1F4FB8; display: flex; flex-direction: column; gap: 16px;">
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 18px;">
+          <div style="width: 52px; height: 52px; border-radius: 50%; background: #1A1A1A; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700; flex-shrink: 0;">2</div>
+          <div style="width: 112px; height: 63px; border-radius: 8px; background: #D0D0CB; flex-shrink: 0;"></div>
+          <div style="flex: 999 1 240px; min-width: 0; display: flex; flex-direction: column; gap: 2px;">
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px;"><span style="font-size: 23px; font-weight: 700;">[두 번째 노래 제목]</span><span style="padding: 2px 10px; border-radius: 8px; background: #1F4FB8; color: #FFFFFF; font-size: 16px; font-weight: 700;">방금 바뀜</span></div>
+            <div style="font-size: 19px; color: #4A4A48;">3분 12초 · <b style="color: #1A1A1A;">빠르게 1.25배</b></div>
+          </div>
+          <button style="height: 56px; padding: 0 18px; display: flex; align-items: center; gap: 8px; border: 2px solid #1A1A1A; border-radius: 12px; background: #FFFFFF; font-size: 19px; font-weight: 700;"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4v16l13-8z"></path></svg>들어보기</button>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; padding-top: 14px; border-top: 2px solid #ECECE8;">
+          <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+            <a href="Trim.html" style="height: 60px; padding: 0 22px; display: flex; align-items: center; gap: 10px; border-radius: 14px; background: #1F4FB8; color: #FFFFFF; font-size: 21px; font-weight: 700; text-decoration: none;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M20 4 8.1 15.9M14.5 14.5 20 20M8.1 8.1 12 12"></path></svg>잘라내기</a>
+            <a href="Speed.html" style="height: 60px; padding: 0 22px; display: flex; align-items: center; gap: 10px; border-radius: 14px; background: #1F4FB8; color: #FFFFFF; font-size: 21px; font-weight: 700; text-decoration: none;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 14l4-4"></path><path d="M3.3 19a10 10 0 1 1 17.4 0"></path></svg>빠르기</a>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+            <button style="height: 60px; padding: 0 16px; border: 2px solid #1A1A1A; border-radius: 12px; background: #FFFFFF; font-size: 18px; font-weight: 600;">위로</button>
+            <button disabled style="height: 60px; padding: 0 16px; border: 2px solid #C4C4BF; border-radius: 12px; background: #F0F0EC; font-size: 18px; font-weight: 600; color: #8A8A86;">아래로</button>
+            <button style="height: 60px; padding: 0 16px; border: 2px solid #B42318; border-radius: 12px; background: #FFFFFF; font-size: 18px; font-weight: 600; color: #B42318;">빼기</button>
+          </div>
+        </div>
+      </article>
+
+      <div style="padding: 18px 20px; border-radius: 18px; border: 3px dashed #8A8A86; background: #F7F7F5; display: flex; flex-direction: column; gap: 12px;">
+        <label for="add-url" style="font-size: 21px; font-weight: 700;">노래 하나 더 붙이기</label>
+        <div style="display: flex; flex-wrap: wrap; gap: 12px;">
+          <input id="add-url" placeholder="다른 유튜브 주소를 넣으세요" style="flex: 999 1 360px; min-width: 0; height: 64px; box-sizing: border-box; padding: 0 20px; border: 2px solid #1A1A1A; border-radius: 14px; background: #FFFFFF; font-size: 20px;">
+          <button style="flex: 1 1 180px; height: 64px; border: 2px solid #1A1A1A; border-radius: 14px; background: #FFFFFF; font-size: 21px; font-weight: 700;">불러와서 붙이기</button>
+        </div>
+      </div>
+    </div>
+
+    <section style="padding: 24px; border-radius: 18px; background: #FFFFFF; border: 2px solid #1A1A1A; display: flex; flex-direction: column; gap: 16px;">
+      <h2 style="margin: 0; display: flex; align-items: center; gap: 10px; font-size: 26px; font-weight: 700;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg>모든 노래에 한 번에 적용</h2>
+      <div style="display: flex; flex-wrap: wrap; gap: 12px;">
+        <a href="SpeedAll.html" style="flex: 1 1 300px; min-height: 76px; box-sizing: border-box; padding: 10px 20px; display: flex; align-items: center; gap: 14px; border: 2px solid #1A1A1A; border-radius: 14px; background: #F7F7F5; color: #1A1A1A; text-decoration: none;"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 14l4-4"></path><path d="M3.3 19a10 10 0 1 1 17.4 0"></path></svg><span style="display: flex; flex-direction: column;"><span style="font-size: 21px; font-weight: 700;">모든 노래 빠르기 바꾸기</span><span style="font-size: 17px; color: #4A4A48;">전체를 같은 빠르기로</span></span></a>
+        <label style="flex: 1 1 300px; min-height: 76px; box-sizing: border-box; padding: 10px 20px; display: flex; align-items: center; gap: 14px; border-radius: 14px; background: #F7F7F5; cursor: pointer;"><input type="checkbox" checked style="width: 32px; height: 32px; flex-shrink: 0; accent-color: #1F4FB8;"><span style="display: flex; flex-direction: column;"><span style="font-size: 21px; font-weight: 700;">노래 사이 부드럽게 잇기</span><span style="font-size: 17px; color: #4A4A48;">끝나고 다음 곡이 자연스럽게</span></span></label>
+        <label style="flex: 1 1 300px; min-height: 76px; box-sizing: border-box; padding: 10px 20px; display: flex; align-items: center; gap: 14px; border-radius: 14px; background: #F7F7F5; cursor: pointer;"><input type="checkbox" checked style="width: 32px; height: 32px; flex-shrink: 0; accent-color: #1F4FB8;"><span style="display: flex; flex-direction: column;"><span style="font-size: 21px; font-weight: 700;">소리 크기 고르게 맞추기</span><span style="font-size: 17px; color: #4A4A48;">곡마다 소리 크기가 달라도 비슷하게</span></span></label>
+      </div>
+    </section>
+
+    <div style="margin-top: auto; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; padding: 20px 24px; border-radius: 18px; background: #FFFFFF; border: 2px solid #E2E2DE;">
+      <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 16px;">
+        <div style="font-size: 21px;">전체 길이 <b style="font-size: 26px;">6분 20초</b></div>
+        <button style="height: 64px; padding: 0 24px; display: flex; align-items: center; gap: 10px; border: 2px solid #1A1A1A; border-radius: 14px; background: #FFFFFF; font-size: 21px; font-weight: 700;"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4v16l13-8z"></path></svg>전체 들어보기</button>
+        <button style="height: 64px; padding: 0 16px; display: flex; align-items: center; gap: 8px; border: none; background: transparent; font-size: 19px; font-weight: 600; color: #4A4A48; text-decoration: underline;">처음 상태로 되돌리기</button>
+      </div>
+      <a href="Done.html" style="height: 76px; padding: 0 40px; display: flex; align-items: center; gap: 12px; border-radius: 18px; background: #1A1A1A; color: #FFFFFF; font-size: 24px; font-weight: 700; text-decoration: none;">다 됐어요, 저장하기<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
+    </div>
+  </main>
+</div>
+
+
+</body>
+</html>
