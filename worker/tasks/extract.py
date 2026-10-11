@@ -102,6 +102,18 @@ def _classify_download_error(e: Exception) -> str:
     return "VIDEO_UNAVAILABLE" if any(h in msg for h in UNAVAILABLE_HINTS) else "EXTRACT_FAILED"
 
 
+def _from_download_error(e: yt_dlp.utils.DownloadError) -> Exception:
+    """yt-dlp가 감싼 예외를 풀어서 돌려준다.
+
+    작업 타임아웃(SoftTimeLimitExceeded)이나 진행률 훅의 ExtractError가
+    DownloadError 안에 들어 있으면 원래 예외를 그대로 쓴다 → TIMEOUT / TOO_LONG.
+    """
+    inner = e.exc_info[1] if getattr(e, "exc_info", None) else None
+    if isinstance(inner, (SoftTimeLimitExceeded, ExtractError)):
+        return inner
+    return ExtractError(_classify_download_error(e), str(e))
+
+
 def run_extract(job_id: str, track_id: str) -> None:
     track = store.get_track(track_id)
     if track is None or store.get_job(job_id) is None:
@@ -122,7 +134,7 @@ def run_extract(job_id: str, track_id: str) -> None:
             try:
                 info = ydl.extract_info(track["url"], download=False)
             except yt_dlp.utils.DownloadError as e:
-                raise ExtractError(_classify_download_error(e), str(e)) from e
+                raise _from_download_error(e) from e
             if info is None or info.get("_type") == "playlist":
                 raise ExtractError("PLAYLIST_NOT_ALLOWED", "playlist")  # normalize_url이 막으므로 오지 않음
             if info.get("is_live") or info.get("live_status") in ("is_live", "is_upcoming"):
@@ -140,10 +152,7 @@ def run_extract(job_id: str, track_id: str) -> None:
             try:
                 info = ydl.process_ie_result(info, download=True)
             except yt_dlp.utils.DownloadError as e:
-                inner = e.exc_info[1] if getattr(e, "exc_info", None) else None
-                if isinstance(inner, ExtractError):
-                    raise inner from e
-                raise ExtractError(_classify_download_error(e), str(e)) from e
+                raise _from_download_error(e) from e
 
         sources = [p for p in work_dir.iterdir() if p.name.startswith("source.") and not p.name.endswith(".part")]
         if not sources:

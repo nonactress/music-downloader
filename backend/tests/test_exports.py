@@ -138,3 +138,10 @@ def test_download_missing(client):
     eid = _done_export()
     config.export_path(eid).unlink()
     assert client.get(f"/exports/{eid}/download").status_code == 404
+
+
+def test_twenty_tracks_ok_twenty_one_rejected(client):
+    sid = _ready_track(200.0)
+    assert client.post("/exports", json=_edit(*[_t(sid)] * 20)).status_code == 202
+    res = client.post("/exports", json=_edit(*[_t(sid)] * 21))
+    assert res.status_code == 422 and res.json()["error"]["code"] == "INVALID_EDIT"

@@ -161,3 +161,20 @@ def test_peaks_from_samples_length_and_range():
     assert peaks[0] == 1.0
     assert peaks[20] == 0.5
     assert peaks[-1] == 0.0
+
+
+@pytest.mark.parametrize("step", ["extract_info", "process_ie_result"])
+def test_extract_timeout_wrapped_in_download_error(fake_ydl, monkeypatch, step):
+    """yt-dlp가 SoftTimeLimitExceeded를 DownloadError로 감싸도 TIMEOUT."""
+    import sys
+    from celery.exceptions import SoftTimeLimitExceeded
+
+    def wrapped(*a, **k):
+        try:
+            raise SoftTimeLimitExceeded()
+        except SoftTimeLimitExceeded:
+            raise yt_dlp.utils.DownloadError("ERROR: SoftTimeLimitExceeded()", sys.exc_info())
+    monkeypatch.setattr(FakeYDL, step, wrapped)
+    job_id, track_id = _new()
+    extract.run_extract(job_id, track_id)
+    assert store.get_job(job_id)["error"]["code"] == "TIMEOUT"
