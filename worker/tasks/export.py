@@ -1,12 +1,15 @@
 """내보내기 작업: Edit JSON → ffmpeg 1회 렌더링 → mp3 (PLAN 10장, CONTRACT 2-2).
 
-진행률: ffmpeg -progress의 out_time / 예상 결과 길이 → 0~99, 끝 100.
+진행률: (소리 크기 맞추기면) 곡별 소리 크기 측정 0→15, 렌더링은 ffmpeg -progress의 out_time /
+예상 결과 길이 → 15~99, 끝 100.
 """
 from __future__ import annotations
 
 import logging
+import os
 import subprocess
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -14,11 +17,14 @@ from celery.exceptions import SoftTimeLimitExceeded
 
 from app import config, queue, store
 from app.error_codes import error_body
-from app.ffmpeg_builder import TrackEdit, build_command, total_duration
+from app.ffmpeg_builder import TrackEdit, build_command, normalize_gain_db, total_duration
 from worker import media
 from worker.celery_app import celery_app
 
 log = logging.getLogger(__name__)
+
+MEASURE_PROGRESS = 15  # 소리 크기 측정이 차지하는 진행률
+MEASURE_WORKERS = max(1, min(4, os.cpu_count() or 1))
 
 
 class ExportError(Exception):
@@ -41,7 +47,23 @@ def _parse_out_time(line: str) -> float | None:
     return None
 
 
-def _render(job_id: str, cmd: list[str], expected: float, log_path) -> None:
+def _measure_gains(job_id: str, inputs: list, tracks: list[TrackEdit]) -> list[float]:
+    """곡별 소리 크기 맞추기 음량(dB). ebur128 측정을 곡마다 동시에 돌린다."""
+    gains: list[float | None] = [None] * len(tracks)
+    pool = ThreadPoolExecutor(max_workers=MEASURE_WORKERS)
+    try:
+        futures = {pool.submit(media.measure_loudness, p, t.start, t.end): i
+                   for i, (p, t) in enumerate(zip(inputs, tracks))}
+        for done, fut in enumerate(as_completed(futures), start=1):
+            loudness, peak = fut.result()
+            gains[futures[fut]] = normalize_gain_db(loudness, peak)
+            store.update_job(job_id, progress=MEASURE_PROGRESS * done // len(tracks))
+    finally:
+        pool.shutdown(wait=False, cancel_futures=True)
+    return gains
+
+
+def _render(job_id: str, cmd: list[str], expected: float, log_path, base: int = 0) -> None:
     cmd = cmd[:-1] + ["-progress", "pipe:1", "-nostats", "-loglevel", "error"] + cmd[-1:]
     started = time.monotonic()
     last_write = 0.0
@@ -58,7 +80,7 @@ def _render(job_id: str, cmd: list[str], expected: float, log_path) -> None:
                 fraction = min(pos / expected, 1.0)
                 elapsed = now - started
                 eta = round(elapsed / fraction - elapsed) if fraction > 0.02 else None
-                store.update_job(job_id, progress=int(fraction * 99), etaSeconds=eta)
+                store.update_job(job_id, progress=base + int(fraction * (99 - base)), etaSeconds=eta)
             proc.wait()
         finally:
             if proc.poll() is None:
@@ -89,10 +111,12 @@ def run_export(job_id: str, export_id: str, edit: dict) -> None:
             raise ExportError("EXPORT_FAILED", f"원곡 파일 없음: {missing}")
 
         crossfade = float(edit["crossfade"])
+        normalize = bool(edit["normalize"])
         expected = total_duration(tracks, crossfade)
+        gains = _measure_gains(job_id, inputs, tracks) if normalize else None
         cmd = build_command([str(p) for p in inputs], tracks, crossfade,
-                            bool(edit["normalize"]), str(tmp))
-        _render(job_id, cmd, expected, log_path)
+                            normalize, str(tmp), gains_db=gains)
+        _render(job_id, cmd, expected, log_path, base=MEASURE_PROGRESS if normalize else 0)
 
         duration = media.probe_duration(tmp)
         tmp.replace(out)

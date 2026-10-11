@@ -13,7 +13,8 @@ TIMEZONE = os.environ.get("TZ", "Asia/Seoul") or "Asia/Seoul"
 # 서버 과부하 방지 (PLAN 12장)
 RATE_LIMIT_PER_MINUTE = int(os.environ.get("RATE_LIMIT_PER_MINUTE", "10"))
 EXTRACT_TIMEOUT_SEC = int(os.environ.get("EXTRACT_TIMEOUT_SEC", "300"))
-EXPORT_TIMEOUT_SEC = int(os.environ.get("EXPORT_TIMEOUT_SEC", "600"))
+# 20분 × 20곡 + 잇기 + 소리 크기 = 이 Mac 176초 (B10). 느린 서버 · 작업 2개 동시 여유로 약 5배
+EXPORT_TIMEOUT_SEC = int(os.environ.get("EXPORT_TIMEOUT_SEC", "900"))
 
 TRACKS_DIR = DATA_DIR / "tracks"
 EXPORTS_DIR = DATA_DIR / "exports"
