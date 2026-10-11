@@ -1,0 +1,171 @@
+/* 값은 docs/wireframes/html 인라인 스타일 그대로. */
+:root {
+  --c-bg: #f7f7f5;
+  --c-surface: #ffffff;
+  --c-text: #1a1a1a;
+  --c-text-sub: #4a4a48;
+  --c-text-muted: #5a5a57;
+  --c-line: #e2e2de;
+  --c-line-soft: #ecece8;
+  --c-chip: #ecece8;
+  --c-chip-dot: #d0d0cb;
+  --c-placeholder: #d0d0cb;
+  --c-panel: #eaeae6;
+  --c-primary: #1f4fb8;
+  --c-primary-soft: #e3eaf8;
+  --c-primary-hover: #163a88;
+  --c-danger: #b42318;
+  --c-danger-soft: #fdecea;
+
+  /* 버튼 높이 — PLAN 결정 10: 모두 60px 이상 (와이어프레임의 52/56px 버튼도 60px) */
+  --h-header-btn: 60px;
+  --h-btn: 60px;
+  --h-btn-md: 64px;
+  --h-btn-lg: 68px;
+  --h-input-lg: 80px;
+  --h-cta: 88px;
+  --h-cta-xl: 92px;
+
+  --font: 'IBM Plex Sans KR', 'Noto Sans CJK KR', sans-serif;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--c-bg); }
+button, input { font-family: inherit; color: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: default; }
+a { color: var(--c-primary); }
+a:hover { color: var(--c-primary-hover); }
+:focus-visible { outline: 4px solid #f2b705; outline-offset: 3px; }
+
+.page {
+  width: 100%;
+  min-height: 960px;
+  background: var(--c-bg);
+  color: var(--c-text);
+  font-family: var(--font);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── 공통 헤더 ─────────────────────────── */
+.header {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 20px 40px; background: var(--c-surface); border-bottom: 2px solid var(--c-line);
+}
+.header__logo { font-size: 26px; font-weight: 700; }
+.header__tools { display: flex; gap: 10px; }
+.header__btn {
+  height: var(--h-header-btn); padding: 0 18px; border: 2px solid var(--c-text); border-radius: 12px;
+  background: var(--c-surface); font-size: 19px; font-weight: 600;
+}
+
+.steps { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.step {
+  display: flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 999px;
+  font-size: 19px; font-weight: 600;
+}
+.step__num {
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; font-size: 16px;
+}
+.step--current { background: var(--c-primary); color: #fff; font-weight: 700; }
+.step--current .step__num { background: #fff; color: var(--c-primary); }
+.step--done { background: var(--c-primary-soft); color: var(--c-primary); }
+.step--todo { background: var(--c-chip); color: var(--c-text-muted); }
+.step--todo .step__num { background: var(--c-chip-dot); }
+
+/* ── 공통 요소 ─────────────────────────── */
+.h1 { margin: 0; font-size: 44px; font-weight: 700; }
+.lead { margin: 0; font-size: 22px; color: var(--c-text-sub); }
+
+.btn-outline {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  border: 2px solid var(--c-text); background: var(--c-surface); color: var(--c-text);
+  font-weight: 700; text-decoration: none;
+}
+.btn-outline:hover { color: var(--c-text); }
+.btn-primary {
+  display: flex; align-items: center; justify-content: center; gap: 14px;
+  border: none; background: var(--c-primary); color: #fff; font-weight: 700; text-decoration: none;
+}
+.btn-primary:hover { color: #fff; background: var(--c-primary-hover); }
+.btn-primary:disabled { background: #8a8a86; }
+
+.error-box {
+  display: flex; align-items: flex-start; gap: 14px; padding: 20px 24px; border-radius: 16px;
+  background: var(--c-danger-soft); border: 2px solid var(--c-danger);
+  font-size: 22px; font-weight: 700; line-height: 1.5; color: var(--c-text);
+}
+.error-box svg { flex-shrink: 0; margin-top: 2px; }
+
+/* ── ① 노래 가져오기 ───────────────────── */
+.import { width: 100%; max-width: 960px; margin: 0 auto; padding: 64px 40px; display: flex; flex-direction: column; gap: 28px; }
+.import__title { display: flex; flex-direction: column; gap: 10px; }
+.import__field { display: flex; flex-direction: column; gap: 12px; }
+.import__label { font-size: 22px; font-weight: 600; }
+.import__row { display: flex; flex-wrap: wrap; gap: 12px; }
+.import__input {
+  flex: 999 1 420px; min-width: 0; height: var(--h-input-lg); padding: 0 22px;
+  border: 3px solid var(--c-text); border-radius: 16px; background: var(--c-surface); font-size: 22px;
+}
+.import__input[aria-invalid='true'] { border-color: var(--c-danger); }
+.import__paste { flex: 1 1 200px; height: var(--h-input-lg); gap: 10px; border-radius: 16px; font-size: 21px; font-weight: 600; }
+.import__submit { height: var(--h-cta); border-radius: 18px; font-size: 28px; }
+
+.howto { margin-top: 16px; padding: 28px; border-radius: 20px; background: var(--c-panel); display: flex; flex-direction: column; gap: 18px; }
+.howto__title { margin: 0; font-size: 24px; font-weight: 700; }
+.howto__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 0; padding: 0; list-style: none; }
+.howto__item { display: flex; flex-direction: column; gap: 10px; }
+.howto__pic {
+  height: 120px; border-radius: 12px; background: var(--c-placeholder);
+  display: flex; align-items: center; justify-content: center; font-size: 16px; color: #555;
+}
+.howto__text { font-size: 20px; }
+
+/* ── ② 불러오는 중 ─────────────────────── */
+.loading { width: 100%; max-width: 1040px; margin: 0 auto; padding: 72px 40px; display: flex; flex-direction: column; gap: 36px; }
+.loading__card {
+  display: flex; flex-wrap: wrap; gap: 36px; align-items: center; padding: 32px; border-radius: 20px;
+  background: var(--c-surface); border: 2px solid var(--c-line);
+}
+.loading__thumb {
+  flex: 1 1 360px; aspect-ratio: 16 / 9; border-radius: 14px; background: var(--c-placeholder);
+  display: flex; align-items: center; justify-content: center; font-size: 18px; color: #555;
+  object-fit: cover; overflow: hidden;
+}
+.loading__info { flex: 999 1 400px; min-width: 0; display: flex; flex-direction: column; gap: 18px; }
+.loading__meta { display: flex; flex-direction: column; gap: 6px; }
+.loading__title { font-size: 28px; font-weight: 700; overflow-wrap: anywhere; }
+.loading__sub { font-size: 20px; color: var(--c-text-sub); }
+.progress { height: 24px; border-radius: 12px; background: var(--c-line); overflow: hidden; }
+.progress__bar { height: 100%; border-radius: 12px; background: var(--c-primary); transition: width 0.6s ease; }
+.loading__status { display: flex; justify-content: space-between; font-size: 22px; }
+.loading__percent { font-weight: 700; }
+.loading__eta { color: var(--c-text-sub); }
+.notice { padding: 20px 24px; border-radius: 16px; background: var(--c-panel); font-size: 21px; line-height: 1.6; }
+.loading__actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.loading__cancel { height: var(--h-btn-md); padding: 0 28px; border-radius: 14px; font-size: 20px; font-weight: 600; }
+.loading__retry { height: var(--h-btn-md); padding: 0 28px; border-radius: 14px; font-size: 20px; }
+
+/* ── ⑦ 저장 완료 ───────────────────────── */
+.done { width: 100%; max-width: 860px; margin: 0 auto; padding: 64px 40px; display: flex; flex-direction: column; align-items: center; gap: 28px; }
+.done__badge { width: 112px; height: 112px; border-radius: 50%; background: var(--c-primary-soft); display: flex; align-items: center; justify-content: center; }
+.done__title { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+.file-card {
+  width: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: 20px; padding: 24px;
+  border-radius: 18px; background: var(--c-surface); border: 2px solid var(--c-line);
+}
+.file-card__icon { width: 64px; height: 64px; border-radius: 14px; background: var(--c-chip); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.file-card__info { flex: 999 1 260px; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.file-card__name { font-size: 24px; font-weight: 700; overflow-wrap: anywhere; }
+.file-card__sub { font-size: 19px; color: var(--c-text-sub); }
+.file-card__play { height: var(--h-btn); padding: 0 22px; border-radius: 14px; font-size: 20px; }
+.done__save { width: 100%; height: var(--h-cta-xl); border-radius: 20px; font-size: 28px; }
+.done__help { font-size: 20px; font-weight: 600; }
+.done__more { width: 100%; display: flex; flex-wrap: wrap; gap: 12px; }
+.done__more > * { flex: 1 1 240px; height: var(--h-btn-lg); border-radius: 16px; font-size: 21px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .progress__bar { transition: none; }
+}
