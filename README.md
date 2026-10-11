@@ -14,6 +14,22 @@
 | [docs/wireframes/html](docs/wireframes/html) | 브라우저로 여는 와이어프레임 (`Main.html`부터, 화면 간 링크 연결) |
 | [docs/wireframes/source](docs/wireframes/source) | 디자인 캔버스 원본 소스 (`.dc.html`) |
 
+## Claude 팀으로 개발하기 (tmux)
+
+에이전트 3개(Lead · Backend · Frontend)가 문서와 와이어프레임을 기준으로 나눠서 작업합니다.
+
+```bash
+brew install tmux          # 처음 한 번
+./scripts/team.sh          # 레포 폴더에서 실행
+tmux kill-session -t music-team   # 종료
+```
+
+| 파일 | 내용 |
+|---|---|
+| [CLAUDE.md](CLAUDE.md) | 팀 공통 규칙 (UX 절대 규칙, 폴더 소유권, 작업 방식) |
+| [team/prompts/](team/prompts) | 역할별 시작 프롬프트 (lead, backend, frontend) |
+| [scripts/team.sh](scripts/team.sh) | tmux 4분할 실행 스크립트 (worktree 생성, 공유 보드 `.team/board.md`) |
+
 ## 기술 스택 (예정)
 
 React + TypeScript · FastAPI · Celery + Redis · yt-dlp · ffmpeg · Docker Compose
