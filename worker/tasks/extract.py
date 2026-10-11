@@ -13,7 +13,7 @@ import yt_dlp
 from celery.exceptions import SoftTimeLimitExceeded
 
 from app import config, queue, store
-from app.errors import error_body
+from app.error_codes import error_body
 from worker import media
 from worker.celery_app import celery_app
 
