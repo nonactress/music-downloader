@@ -47,6 +47,9 @@ export function EditPage() {
 
   useEffect(() => () => usePreview.getState().stop(), [])
 
+  // 원인을 고치면(잇기 끔 · 노래 뺌 · 더 길게 자름 …) 저장 안내는 지운다 — 서버 4xx 안내도 같이
+  useEffect(() => setSaveError(null), [edit])
+
   const initial = initialEdit(edit, trackInfo)
   const atInitial = isSameEdit(edit, initial)
 
