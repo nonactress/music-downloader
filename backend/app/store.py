@@ -138,10 +138,10 @@ def update_export(export_id: str, **fields: Any) -> dict | None:
 
 # ---- 요청 수 제한 -----------------------------------------------------------
 
-def hit_rate_limit(ip: str, limit: int, window_sec: int = 60) -> bool:
-    """window 안에서 limit번을 넘으면 True."""
+def hit_rate_limit(scope: str, ip: str, limit: int, window_sec: int = 60) -> bool:
+    """window 안에서 limit번을 넘으면 True (고정 창, IP · 경로별)."""
     r = get_redis()
-    key = f"rl:{ip}"
+    key = f"rl:{scope}:{ip}"
     count = r.incr(key)
     if count == 1:
         r.expire(key, window_sec)

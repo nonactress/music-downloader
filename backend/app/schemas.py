@@ -25,7 +25,7 @@ class TrackEditIn(_Model):
 
 
 class EditJson(_Model):
-    tracks: list[TrackEditIn] = Field(min_length=1, max_length=20)
+    tracks: list[TrackEditIn] = Field(min_length=1)
     crossfade: float = Field(ge=0, le=10)
     normalize: bool
     format: Literal["mp3"]
