@@ -8,6 +8,29 @@ export interface Segment {
   end: number
   speed: number
   keepPitch: boolean
+  /** 부드럽게 잇기 흉내: 처음 1초 소리 키우기 (결정 41) */
+  fadeIn?: boolean
+  /** 부드럽게 잇기 흉내: 끝 1초 소리 줄이기 (결정 41) */
+  fadeOut?: boolean
+}
+
+/** 페이드 길이 — 결과(빠르기 반영) 기준 1초 */
+export const FADE_SEC = 1
+
+/** 구간 안 위치(원곡 초)에서의 소리 크기 0~1 — 겹치지 않고 소리만 줄였다 키운다 */
+export function fadeVolume(seg: Segment, currentTime: number): number {
+  const fromStart = (currentTime - seg.start) / seg.speed
+  const toEnd = (seg.end - currentTime) / seg.speed
+  let v = 1
+  if (seg.fadeIn) v = Math.min(v, fromStart / FADE_SEC)
+  if (seg.fadeOut) v = Math.min(v, toEnd / FADE_SEC)
+  return Math.max(0, Math.min(1, v))
+}
+
+/** 여러 곡을 이어 들을 때 잇기가 켜져 있으면 곡 사이에만 페이드를 붙인다 */
+export function withFades(segments: Segment[], crossfade: boolean): Segment[] {
+  if (!crossfade || segments.length < 2) return segments
+  return segments.map((s, i) => ({ ...s, fadeIn: i > 0, fadeOut: i < segments.length - 1 }))
 }
 
 interface PreviewStore {
@@ -45,6 +68,7 @@ function checkEnd(): boolean {
     next()
     return true
   }
+  if (seg) audio.volume = fadeVolume(seg, audio.currentTime)
   return false
 }
 
@@ -86,6 +110,7 @@ async function playAt(i: number, id: number) {
   a.playbackRate = seg.speed
   a.preservesPitch = seg.keepPitch
   a.currentTime = seg.start
+  a.volume = fadeVolume(seg, seg.start)
   advancing = false
   try {
     await a.play()
@@ -124,6 +149,7 @@ export const usePreview = create<PreviewStore>((set, get) => ({
     advancing = false
     cancelAnimationFrame(frame)
     audio?.pause()
+    if (audio) audio.volume = 1
     queue = []
     set({ playingKey: null })
   },
