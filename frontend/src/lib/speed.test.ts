@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { canFaster, canSlower, formatRate, normalizeSpeed, speedName, speedWithRate } from './speed'
+import { SPEED_STEP, canFaster, canSlower, formatRate, normalizeSpeed, speedName, speedWithRate } from './speed'
 
 describe('speed (결정 26 · 27)', () => {
   it('0.05 단위 · 0.5~2.0 범위 · 부동소수 오차 없음', () => {
@@ -10,6 +10,14 @@ describe('speed (결정 26 · 27)', () => {
     let x = 1
     for (let i = 0; i < 3; i++) x = normalizeSpeed(x + 0.05)
     expect(x).toBe(1.15)
+  })
+  it('1.0에서 [+] 20번 = 정확히 2, [−] 10번 = 정확히 0.5', () => {
+    let up = 1
+    for (let i = 0; i < 20; i++) up = normalizeSpeed(up + SPEED_STEP)
+    expect(up).toBe(2)
+    let down = 1
+    for (let i = 0; i < 10; i++) down = normalizeSpeed(down - SPEED_STEP)
+    expect(down).toBe(0.5)
   })
   it('끝에 닿으면 그쪽 비활성', () => {
     expect(canSlower(0.5)).toBe(false)

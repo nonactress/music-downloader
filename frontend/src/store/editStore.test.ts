@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
+import { SPEED_STEP, canFaster, canSlower, normalizeSpeed } from '../lib/speed'
 import { resultDuration, selectLastChange, trimState, useEditStore } from './editStore'
 
 const info = (id: string, durationSec: number) => ({
@@ -55,6 +56,26 @@ describe('editStore', () => {
     expect(st().history).toHaveLength(1)
     st().undo()
     expect(st().edit).toEqual(before)
+  })
+})
+
+describe('빠르기 [+][−] 저장값 (화면 글자 말고 Edit JSON)', () => {
+  beforeEach(() => st().reset())
+
+  /** ⑤ 조금씩 바꾸기 버튼과 같은 동작: 비활성이 아니면 normalizeSpeed(x ± 0.05)를 setLive */
+  const press = (dir: 1 | -1) => {
+    const e = st().edit
+    const t = e.tracks[0]
+    if (dir > 0 ? !canFaster(t.speed) : !canSlower(t.speed)) return
+    st().setLive({ ...e, tracks: [{ ...t, speed: normalizeSpeed(t.speed + dir * SPEED_STEP) }] })
+  }
+
+  it('1.0에서 [+] 20번 → speed toBe(2), [−] 30번 → toBe(0.5)', () => {
+    st().addTrack(info('t1', 100))
+    for (let i = 0; i < 20; i++) press(1)
+    expect(st().edit.tracks[0].speed).toBe(2)
+    for (let i = 0; i < 30; i++) press(-1)
+    expect(st().edit.tracks[0].speed).toBe(0.5)
   })
 })
 
