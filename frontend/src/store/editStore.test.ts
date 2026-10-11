@@ -46,6 +46,20 @@ describe('editStore', () => {
     expect(selectLastChange(st())).toBeNull()
   })
 
+  it('appendTrack — 맨 아래에 붙고 되돌리기 1번, 알림 "N번 노래를 붙였어요" (결정 36)', () => {
+    st().addTrack(info('t1', 100))
+    st().appendTrack(info('t2', 240))
+    expect(st().edit.tracks.map((t) => t.sourceId)).toEqual(['t1', 't2'])
+    expect(st().edit.tracks[1]).toEqual({ sourceId: 't2', start: 0, end: 240, speed: 1.0, keepPitch: true })
+    expect(st().trackInfo.t2.durationSec).toBe(240)
+    expect(selectLastChange(st())).toEqual({ prefix: '2번 노래를 붙였어요', trackIndex: 1 })
+    st().appendTrack(info('t2', 240))
+    expect(st().edit.tracks).toHaveLength(2)
+    expect(st().history).toHaveLength(1)
+    st().undo()
+    expect(st().edit.tracks.map((t) => t.sourceId)).toEqual(['t1'])
+  })
+
   it('setLive 여러 번 + recordSince = 되돌리기 1번 (결정 22)', () => {
     st().addTrack(info('t1', 100))
     const before = st().edit

@@ -14,11 +14,16 @@ interface FlowStore {
   songIndex: number
   /** 모든 노래 빠르기에 한 곡 빠르기의 [모든 노래]로 왔으면 그 노래, 편집 홈에서 왔으면 null (결정 31) */
   speedAllFrom: number | null
+  /** ② 불러오는 중이 처음 불러오기인지, 편집 홈에서 붙이기인지 (결정 36) */
+  extractMode: 'import' | 'append'
   /** ① 입력칸에 넣었던 주소 — 다시 시도할 때 채워 둔다 */
   lastUrl: string
+  /** ③ 붙이기 칸에 넣었던 주소 — 실패해서 돌아오면 채워 둔다 */
+  appendUrl: string
   exportResult: ExportResult | null
 
   startLoading: (extractJobId: string, url: string) => void
+  startAppending: (extractJobId: string, url: string) => void
   startSaving: (exportJobId: string) => void
   openTrim: (index: number) => void
   openSpeed: (index: number) => void
@@ -34,11 +39,15 @@ export const useFlowStore = create<FlowStore>((set) => ({
   exportJobId: null,
   songIndex: 0,
   speedAllFrom: null,
+  extractMode: 'import',
   lastUrl: '',
+  appendUrl: '',
   exportResult: null,
 
   startLoading: (extractJobId, url) =>
-    set({ screen: 'loading', extractJobId, lastUrl: url, exportResult: null }),
+    set({ screen: 'loading', extractMode: 'import', extractJobId, lastUrl: url, appendUrl: '', exportResult: null }),
+  startAppending: (extractJobId, url) =>
+    set({ screen: 'loading', extractMode: 'append', extractJobId, appendUrl: url }),
   startSaving: (exportJobId) => set({ screen: 'saving', exportJobId, exportResult: null }),
   openTrim: (index) => set({ screen: 'trim', songIndex: index }),
   openSpeed: (index) => set({ screen: 'speed', songIndex: index }),

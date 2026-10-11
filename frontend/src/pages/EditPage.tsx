@@ -1,9 +1,10 @@
 // ③ 편집 홈 — docs/wireframes/html/Edit.html
-// 3단계 범위 (결정 32): [위로][아래로][빼기], 노래 하나 더 붙이기, 부드럽게 잇기 · 소리 크기 체크는 숨김 (결정 17)
+// 4단계 진행 중: [위로][아래로][빼기], 부드럽게 잇기 · 소리 크기 체크는 F18 · F19에서
 import { useEffect, useState } from 'react'
 import { api } from '../api/client'
 import { toUserMessage } from '../api/errors'
 import type { EditTrack } from '../api/types'
+import { AppendBox } from '../components/AppendBox'
 import { ChangeNotice } from '../components/ChangeNotice'
 import { ErrorBox } from '../components/ErrorBox'
 import { ArrowRightIcon, GaugeIcon, GridIcon, PauseIcon, PlayIcon } from '../components/Icons'
@@ -107,6 +108,8 @@ export function EditPage() {
               />
             )
           })}
+
+          <AppendBox count={edit.tracks.length} onStart={() => usePreview.getState().stop()} />
         </div>
 
         <section className="apply-all" aria-labelledby="apply-all-title">

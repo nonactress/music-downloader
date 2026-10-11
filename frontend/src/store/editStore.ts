@@ -5,6 +5,8 @@ import type { EditJson, EditTrack, TrackInfo } from '../api/types'
 export const DEFAULT_CROSSFADE = 2
 /** 원곡 길이 비교 오차 (CONTRACT 3-2와 같음) */
 export const DURATION_EPSILON = 0.05
+/** CONTRACT 3-2 곡 수 상한 */
+export const MAX_TRACKS = 20
 
 export const emptyEdit = (): EditJson => ({
   tracks: [],
@@ -69,8 +71,10 @@ interface EditStore {
   setLive: (next: EditJson) => void
   /** before 이후 바뀐 것 전체를 되돌리기 1번으로 기록 */
   recordSince: (before: EditJson, change: Change) => void
-  /** 불러온 노래를 목록에 넣는다 (되돌리기 대상 아님) */
+  /** 처음 불러온 노래를 목록에 넣는다 (되돌리기 대상 아님, 결정 43) */
   addTrack: (info: TrackInfo) => void
+  /** 편집 홈에서 붙인 노래를 맨 아래에 — 되돌리기 1번 (결정 36) */
+  appendTrack: (info: TrackInfo) => void
   undo: () => void
   reset: () => void
 }
@@ -93,6 +97,17 @@ export const useEditStore = create<EditStore>((set) => ({
       if (s.edit.tracks.some((t) => t.sourceId === info.trackId)) return s
       return {
         edit: { ...s.edit, tracks: [...s.edit.tracks, defaultEditTrack(info)] },
+        trackInfo: { ...s.trackInfo, [info.trackId]: info },
+      }
+    }),
+
+  appendTrack: (info) =>
+    set((s) => {
+      if (s.edit.tracks.some((t) => t.sourceId === info.trackId)) return s
+      const n = s.edit.tracks.length + 1
+      return {
+        edit: { ...s.edit, tracks: [...s.edit.tracks, defaultEditTrack(info)] },
+        history: [...s.history, { edit: s.edit, change: { prefix: `${n}번 노래를 붙였어요`, trackIndex: n - 1 } }],
         trackInfo: { ...s.trackInfo, [info.trackId]: info },
       }
     }),
