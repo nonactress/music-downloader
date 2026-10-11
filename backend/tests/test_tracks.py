@@ -102,3 +102,70 @@ def test_unknown_route_404_format(client):
     res = client.get("/nope")
     assert res.status_code == 404
     assert res.json()["error"]["code"] == "NOT_FOUND"
+
+
+# ---- GET /tracks/{id}/audio · /peaks (CONTRACT 2-3, 2-4) --------------------
+
+from app import config  # noqa: E402
+
+
+def _track(status="done", audio=b"0123456789" * 50, peaks=True):
+    job = store.create_job("extract")
+    tid = store.create_track(job["jobId"], CANON)["trackId"]
+    store.update_track(tid, status=status, durationSec=0.13)
+    config.TRACKS_DIR.mkdir(parents=True, exist_ok=True)
+    if audio is not None:
+        config.track_audio_path(tid).write_bytes(audio)
+    if peaks:
+        config.track_peaks_path(tid).write_text(
+            f'{{"trackId":"{tid}","durationSec":0.13,"pointsPerSecond":20,"peaks":[0.1,0.5,0.0]}}')
+    return tid
+
+
+def test_audio(client):
+    tid = _track()
+    res = client.get(f"/tracks/{tid}/audio")
+    assert res.status_code == 200
+    assert res.headers["content-type"] == "audio/mpeg"
+    assert res.headers["accept-ranges"] == "bytes"
+    assert "content-disposition" not in res.headers
+    assert len(res.content) == 500
+
+
+def test_audio_range(client):
+    tid = _track()
+    res = client.get(f"/tracks/{tid}/audio", headers={"Range": "bytes=0-9"})
+    assert res.status_code == 206
+    assert res.content == b"0123456789"
+    assert res.headers["content-range"] == "bytes 0-9/500"
+
+
+def test_peaks(client):
+    tid = _track()
+    res = client.get(f"/tracks/{tid}/peaks")
+    assert res.status_code == 200
+    assert res.headers["content-type"].startswith("application/json")
+    assert res.json() == {"trackId": tid, "durationSec": 0.13, "pointsPerSecond": 20,
+                          "peaks": [0.1, 0.5, 0.0]}
+
+
+@pytest.mark.parametrize("kind", ["audio", "peaks"])
+@pytest.mark.parametrize("status", ["queued", "running"])
+def test_not_ready(client, kind, status):
+    tid = _track(status=status, audio=None, peaks=False)
+    res = client.get(f"/tracks/{tid}/{kind}")
+    assert res.status_code == 409 and res.json()["error"]["code"] == "NOT_READY"
+
+
+@pytest.mark.parametrize("kind", ["audio", "peaks"])
+def test_not_found_cases(client, kind):
+    assert client.get(f"/tracks/t_nope/{kind}").status_code == 404
+    failed = _track(status="failed", audio=None, peaks=False)
+    assert client.get(f"/tracks/{failed}/{kind}").status_code == 404
+    deleted = _track(audio=None, peaks=False)  # 24시간 정리로 파일만 지워진 경우
+    res = client.get(f"/tracks/{deleted}/{kind}")
+    assert res.status_code == 404 and res.json()["error"]["code"] == "NOT_FOUND"
+
+
+def test_path_traversal_id_is_404(client):
+    assert client.get("/tracks/..%2F..%2Fetc%2Fpasswd/audio").status_code == 404
