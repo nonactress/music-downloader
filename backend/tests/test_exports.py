@@ -79,9 +79,10 @@ def test_source_missing(client):
     assert res.status_code == 404 and res.json()["error"]["code"] == "NOT_FOUND"
 
 
-def test_source_failed_is_not_found(client):
+def test_source_extract_failed_is_404(client):
+    """CONTRACT v1.3: 추출이 실패한 sourceId → 404 NOT_FOUND."""
     res = client.post("/exports", json=_edit(_t(_ready_track(status="failed", with_file=False))))
-    assert res.status_code == 404
+    assert res.status_code == 404 and res.json()["error"]["code"] == "NOT_FOUND"
 
 
 def test_source_file_deleted(client):
@@ -145,3 +146,12 @@ def test_twenty_tracks_ok_twenty_one_rejected(client):
     assert client.post("/exports", json=_edit(*[_t(sid)] * 20)).status_code == 202
     res = client.post("/exports", json=_edit(*[_t(sid)] * 21))
     assert res.status_code == 422 and res.json()["error"]["code"] == "INVALID_EDIT"
+
+
+def test_download_render_failed_is_404(client):
+    """CONTRACT v1.3: 렌더링이 실패한 내보내기 → 404 NOT_FOUND (409 아님)."""
+    job = store.create_job("export")
+    exp = store.create_export(job["jobId"])
+    store.update_export(exp["exportId"], status="failed")
+    res = client.get(f"/exports/{exp['exportId']}/download")
+    assert res.status_code == 404 and res.json()["error"]["code"] == "NOT_FOUND"
