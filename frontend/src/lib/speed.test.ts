@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { canFaster, canSlower, formatRate, normalizeSpeed, speedName, speedWithRate } from './speed'
+import { SPEED_STEP, canFaster, canSlower, formatRate, normalizeSpeed, speedName, speedWithRate } from './speed'
 
-describe('speed (결정 26 · 27)', () => {
+describe('speed (결정 26 · 27 · 35)', () => {
   it('0.05 단위 · 0.5~2.0 범위 · 부동소수 오차 없음', () => {
     expect(normalizeSpeed(1.25 + 0.05)).toBe(1.3)
     expect(normalizeSpeed(1 - 0.05 - 0.05)).toBe(0.9)
@@ -10,6 +10,14 @@ describe('speed (결정 26 · 27)', () => {
     let x = 1
     for (let i = 0; i < 3; i++) x = normalizeSpeed(x + 0.05)
     expect(x).toBe(1.15)
+  })
+  it('1.0에서 [+] 20번 = 정확히 2, [−] 10번 = 정확히 0.5', () => {
+    let up = 1
+    for (let i = 0; i < 20; i++) up = normalizeSpeed(up + SPEED_STEP)
+    expect(up).toBe(2)
+    let down = 1
+    for (let i = 0; i < 10; i++) down = normalizeSpeed(down - SPEED_STEP)
+    expect(down).toBe(0.5)
   })
   it('끝에 닿으면 그쪽 비활성', () => {
     expect(canSlower(0.5)).toBe(false)
@@ -20,10 +28,13 @@ describe('speed (결정 26 · 27)', () => {
   it('표시 · 이름', () => {
     expect(formatRate(1.25)).toBe('1.25배')
     expect(formatRate(1.1)).toBe('1.1배')
-    expect(formatRate(1)).toBe('1배')
+    expect(formatRate(1)).toBe('1.0배')
+    expect(formatRate(0.5)).toBe('0.5배')
+    expect(formatRate(2)).toBe('2.0배')
+    expect(formatRate(1.05)).toBe('1.05배')
     expect(speedName(0.75)).toBe('느리게')
     expect(speedName(1)).toBe('보통')
     expect(speedWithRate(1.25)).toBe('빠르게(1.25배)')
-    expect(speedWithRate(1)).toBe('보통(1배)')
+    expect(speedWithRate(1)).toBe('보통(1.0배)')
   })
 })

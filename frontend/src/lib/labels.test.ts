@@ -12,5 +12,6 @@ describe('labels', () => {
     expect(speedLabel(1)).toBe('보통 빠르기')
     expect(speedLabel(1.25)).toBe('빠르게 1.25배')
     expect(speedLabel(0.75)).toBe('느리게 0.75배')
+    expect(speedLabel(2)).toBe('빠르게 2.0배')
   })
 })

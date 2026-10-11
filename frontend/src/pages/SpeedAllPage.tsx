@@ -25,7 +25,7 @@ export function SpeedAllPage() {
   const edit = useEditStore((s) => s.edit)
   const playingKey = usePreview((s) => s.playingKey)
   const togglePreview = usePreview((s) => s.toggle)
-  // 처음 선택은 보통(1배) + 높낮이 유지 (결정 29)
+  // 처음 선택은 보통(1.0배) + 높낮이 유지 (결정 29)
   const [speed, setSpeed] = useState(1)
   const [keepPitch, setKeepPitch] = useState(true)
 

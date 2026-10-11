@@ -1,4 +1,4 @@
-// 빠르기 규칙 · 문구 (CONTRACT 3-2, PLAN 결정 26 · 27)
+// 빠르기 규칙 · 문구 (CONTRACT 3-2, PLAN 결정 26 · 27 · 35)
 export const SPEED_MIN = 0.5
 export const SPEED_MAX = 2.0
 export const SPEED_STEP = 0.05
@@ -27,8 +27,8 @@ export const isSameSpeed = (a: number, b: number) => Math.abs(a - b) < 1e-9
 export const canSlower = (x: number) => x > SPEED_MIN + 1e-9
 export const canFaster = (x: number) => x < SPEED_MAX - 1e-9
 
-/** 1.25 → "1.25배", 1.1 → "1.1배", 1 → "1배" */
-export const formatRate = (x: number) => `${Number(x.toFixed(2))}배`
+/** 결정 35: 소수 첫째 자리까지 항상 — 1 → "1.0배", 1.1 → "1.1배", 1.25 → "1.25배", 2 → "2.0배" */
+export const formatRate = (x: number) => `${x.toFixed(2).replace(/(\.\d)0$/, '$1')}배`
 
 /** 결정 27: 1보다 작으면 "느리게", 1이면 "보통", 크면 "빠르게" */
 export function speedName(x: number): string {
