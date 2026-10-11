@@ -1,5 +1,5 @@
 // ③ 편집 홈 — docs/wireframes/html/Edit.html
-// 4단계 진행 중: [위로][아래로][빼기], 부드럽게 잇기 · 소리 크기 체크는 F18 · F19에서
+// 4단계 진행 중: 부드럽게 잇기 · 소리 크기 체크는 F19에서
 import { useEffect, useState } from 'react'
 import { api } from '../api/client'
 import { toUserMessage } from '../api/errors'
@@ -11,6 +11,8 @@ import { ArrowRightIcon, GaugeIcon, GridIcon, PauseIcon, PlayIcon } from '../com
 import { Page } from '../components/Page'
 import { SongCard } from '../components/SongCard'
 import { formatKoreanDuration } from '../lib/format'
+import { eulReul } from '../lib/josa'
+import { moveTrack, removeTrack } from '../lib/reorder'
 import { usePreview, type Segment } from '../lib/preview'
 import {
   initialEdit, isSameEdit, resultDuration, selectLastChange, useEditStore,
@@ -56,6 +58,27 @@ export function EditPage() {
   function resetAll() {
     usePreview.getState().stop()
     useEditStore.getState().commit(initial, { prefix: '모든 노래를 처음 상태로 되돌렸어요' })
+  }
+
+  /** 결정 38: 누르는 즉시 반영, 한 번 = 되돌리기 1번 */
+  function move(from: number, to: number) {
+    usePreview.getState().stop()
+    const store = useEditStore.getState()
+    const t = store.edit.tracks[from]
+    const title = store.trackInfo[t.sourceId]?.title ?? ''
+    const next = moveTrack(store.edit, from, to)
+    if (next === store.edit) return
+    store.commit(next, { prefix: `「${title}」${eulReul(title)} ${to + 1}번으로 옮겼어요`, trackIndex: to })
+  }
+
+  function remove(index: number) {
+    usePreview.getState().stop()
+    const store = useEditStore.getState()
+    const t = store.edit.tracks[index]
+    const title = store.trackInfo[t.sourceId]?.title ?? ''
+    const next = removeTrack(store.edit, index)
+    if (next === store.edit) return
+    store.commit(next, { prefix: `「${title}」${eulReul(title)} 뺐어요` })
   }
 
   async function save() {
@@ -105,6 +128,10 @@ export function EditPage() {
                   usePreview.getState().stop()
                   openSpeed(i)
                 }}
+                count={edit.tracks.length}
+                onUp={() => move(i, i - 1)}
+                onDown={() => move(i, i + 1)}
+                onRemove={() => remove(i)}
               />
             )
           })}

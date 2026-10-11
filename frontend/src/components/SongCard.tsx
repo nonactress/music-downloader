@@ -1,5 +1,5 @@
 // 노래 카드 — docs/wireframes/html/Edit.html
-// 3단계 범위: [위로][아래로][빼기]는 4단계까지 숨김 (결정 17 · 32)
+// [위로][아래로][빼기]: 맨 위 [위로] · 맨 아래 [아래로] 비활성, 1곡이면 [빼기] 비활성 (결정 38)
 import type { EditTrack, TrackInfo } from '../api/types'
 import { formatKoreanDuration } from '../lib/format'
 import { speedLabel, trimLabel } from '../lib/labels'
@@ -15,9 +15,15 @@ interface Props {
   onPlay: () => void
   onTrim: () => void
   onSpeed: () => void
+  /** 목록 전체 곡 수 — 끝 버튼 비활성에 씀 */
+  count: number
+  onUp: () => void
+  onDown: () => void
+  onRemove: () => void
 }
 
-export function SongCard({ index, track, info, justChanged, playing, onPlay, onTrim, onSpeed }: Props) {
+export function SongCard(p: Props) {
+  const { index, track, info, justChanged, playing, onPlay, onTrim, onSpeed, count } = p
   const normalSpeed = speedLabel(track.speed) === '보통 빠르기'
   return (
     <article className={`song-card${justChanged ? ' song-card--changed' : ''}`} aria-label={`${index + 1}번 노래`}>
@@ -54,6 +60,11 @@ export function SongCard({ index, track, info, justChanged, playing, onPlay, onT
             <GaugeIcon />
             빠르기
           </button>
+        </div>
+        <div className="song-card__order">
+          <button type="button" className="order-btn" onClick={p.onUp} disabled={index === 0}>위로</button>
+          <button type="button" className="order-btn" onClick={p.onDown} disabled={index === count - 1}>아래로</button>
+          <button type="button" className="order-btn order-btn--danger" onClick={p.onRemove} disabled={count <= 1}>빼기</button>
         </div>
       </div>
     </article>
