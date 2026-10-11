@@ -82,3 +82,20 @@ test('실제 백엔드: 빠르기 1.25배 → 저장 → 다운로드 길이 = (
   expect(sec).toBeGreaterThan(19.006 / 1.25 - 0.1)
   expect(sec).toBeLessThan(19.006 / 1.25 + 0.1)
 })
+
+test('실제 백엔드: [+]로 2.0배 끝까지 올린 Edit JSON → POST /exports 202', async ({ page }) => {
+  test.setTimeout(240_000)
+  await importToEditHome(page)
+  await page.getByRole('button', { name: '빠르기', exact: true }).click()
+  const faster = page.getByRole('group', { name: '조금씩 바꾸기' }).getByRole('button', { name: '조금 빠르게' })
+  while (await faster.isEnabled()) await faster.click()
+  await expect(page.getByRole('group', { name: '조금씩 바꾸기' })).toContainText('2.0배')
+  await page.getByRole('button', { name: '완료, 목록으로' }).click()
+
+  const posted = page.waitForResponse((r) => r.url().endsWith('/api/exports') && r.request().method() === 'POST')
+  await page.getByRole('button', { name: '다 됐어요, 저장하기' }).click()
+  const res = await posted
+  expect(res.status()).toBe(202)
+  expect(res.request().postDataJSON().tracks[0].speed).toBe(2)
+  await expect(page.getByRole('heading', { name: '노래를 만들고 있어요' })).toBeVisible()
+})

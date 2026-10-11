@@ -18,7 +18,7 @@ test('⑤ 처음 모습 — 보통 선택, 이 노래만, 높낮이 체크, 원�
   await expect(page.getByRole('radio', { name: '이 노래만' })).toHaveAttribute('aria-checked', 'true')
   await expect(preset(page, '보통')).toHaveAttribute('aria-pressed', 'true')
   await expect(preset(page, '빠르게')).toHaveAttribute('aria-pressed', 'false')
-  await expect(fine(page)).toContainText('1배')
+  await expect(fine(page)).toContainText('1.0배')
   // 결정 33: 기호만 있는 버튼 금지
   await expect(fine(page).getByRole('button', { name: '조금 느리게' })).toHaveText('−느리게')
   await expect(fine(page).getByRole('button', { name: '조금 빠르게' })).toHaveText('+빠르게')
@@ -67,7 +67,7 @@ test('⑤ 조금씩 바꾸기 0.05 단위 · 끝에서 비활성 · 프리셋은
   await expect(fine(page)).toContainText('1.1배')
   for (const name of ['느리게', '보통', '빠르게']) await expect(preset(page, name)).toHaveAttribute('aria-pressed', 'false')
   while (await faster.isEnabled()) await faster.click()
-  await expect(fine(page)).toContainText('2배')
+  await expect(fine(page)).toContainText('2.0배')
   await preset(page, '느리게').click()
   while (await slower.isEnabled()) await slower.click()
   await expect(fine(page)).toContainText('0.5배')
