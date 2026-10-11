@@ -1,0 +1,52 @@
+# 쉬운 음악 만들기 — 로컬 개발용 (PLAN.md 7장, 11장)
+# 실행: docker compose up --build
+# Dockerfile은 backend 담당이 작성: backend/Dockerfile, worker/Dockerfile
+# (worker가 backend/app/ffmpeg_builder.py를 함께 쓰므로 build context는 레포 루트)
+
+x-app-env: &app-env
+  REDIS_URL: redis://redis:6379/0
+  DATA_DIR: /data                  # 추출 · 결과 파일 저장 위치
+  FILE_TTL_HOURS: "24"             # 24시간 뒤 자동 삭제 (PLAN 12장)
+  MAX_DURATION_SEC: "1200"         # 20분 초과 영상 거절
+  TZ: Asia/Seoul                   # 결과 파일 이름 "내 노래_MMDD.mp3"
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment: *app-env
+    ports:
+      - "8000:8000"
+    volumes:
+      - media:/data
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: .
+      dockerfile: worker/Dockerfile
+    environment: *app-env
+    volumes:
+      - media:/data
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  media:
