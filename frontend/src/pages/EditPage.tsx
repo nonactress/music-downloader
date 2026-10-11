@@ -1,5 +1,5 @@
 // ③ 편집 홈 — docs/wireframes/html/Edit.html
-// 4단계 진행 중: 부드럽게 잇기 · 소리 크기 체크는 F19에서
+// 4단계: 와이어프레임 전체 영역 + 최소 높이 1240px (결정 43)
 import { useEffect, useState } from 'react'
 import { api } from '../api/client'
 import { toUserMessage } from '../api/errors'
@@ -13,9 +13,9 @@ import { SongCard } from '../components/SongCard'
 import { formatKoreanDuration } from '../lib/format'
 import { eulReul } from '../lib/josa'
 import { moveTrack, removeTrack } from '../lib/reorder'
-import { usePreview, type Segment } from '../lib/preview'
+import { usePreview, withFades, type Segment } from '../lib/preview'
 import {
-  initialEdit, isSameEdit, resultDuration, selectLastChange, useEditStore,
+  DEFAULT_CROSSFADE, initialEdit, isSameEdit, resultDuration, selectLastChange, trackDuration, useEditStore,
 } from '../store/editStore'
 import { useFlowStore } from '../store/flowStore'
 
@@ -81,9 +81,36 @@ export function EditPage() {
     store.commit(next, { prefix: `「${title}」${eulReul(title)} 뺐어요` })
   }
 
+  /** 결정 39: 체크도 즉시 반영 + 되돌리기 1번 */
+  function setCrossfade(on: boolean) {
+    usePreview.getState().stop()
+    const store = useEditStore.getState()
+    store.commit(
+      { ...store.edit, crossfade: on ? DEFAULT_CROSSFADE : 0 },
+      { prefix: `노래 사이 부드럽게 잇기를 ${on ? '켰어요' : '껐어요'}` },
+    )
+  }
+
+  function setNormalize(on: boolean) {
+    usePreview.getState().stop()
+    const store = useEditStore.getState()
+    store.commit({ ...store.edit, normalize: on }, { prefix: `소리 크기 고르게 맞추기를 ${on ? '켰어요' : '껐어요'}` })
+  }
+
   async function save() {
     if (saving) return
     usePreview.getState().stop()
+    // 결정 40: 잇기 길이보다 짧은 노래가 있으면 서버에 보내지 않음 (CONTRACT 3-2)
+    const current = useEditStore.getState().edit
+    if (current.crossfade > 0 && current.tracks.length >= 2) {
+      const short = current.tracks.findIndex((t) => trackDuration(t) <= current.crossfade)
+      if (short >= 0) {
+        setSaveError(
+          `${short + 1}번 노래가 너무 짧아서 부드럽게 이을 수 없어요. 더 길게 남기거나 [노래 사이 부드럽게 잇기]를 꺼 주세요.`,
+        )
+        return
+      }
+    }
     setSaving(true)
     setSaveError(null)
     try {
@@ -95,9 +122,8 @@ export function EditPage() {
     }
   }
 
-  // 와이어프레임 최소 높이 1240px은 숨긴 영역(결정 17)까지 있을 때 값 — 2단계는 기본 960px
   return (
-    <Page step={2}>
+    <Page step={2} minHeight={1240}>
       <main className="edit">
         {lastChange && <ChangeNotice change={lastChange} onUndo={undo} />}
 
@@ -159,6 +185,20 @@ export function EditPage() {
                 <span className="apply-all__sub">전체를 같은 빠르기로</span>
               </span>
             </button>
+            <label className="apply-all__tile apply-all__check">
+              <input type="checkbox" checked={edit.crossfade > 0} onChange={(e) => setCrossfade(e.target.checked)} />
+              <span className="apply-all__text">
+                <span className="apply-all__name">노래 사이 부드럽게 잇기</span>
+                <span className="apply-all__sub">끝나고 다음 곡이 자연스럽게</span>
+              </span>
+            </label>
+            <label className="apply-all__tile apply-all__check">
+              <input type="checkbox" checked={edit.normalize} onChange={(e) => setNormalize(e.target.checked)} />
+              <span className="apply-all__text">
+                <span className="apply-all__name">소리 크기 고르게 맞추기</span>
+                <span className="apply-all__sub">곡마다 소리 크기가 달라도 비슷하게</span>
+              </span>
+            </label>
           </div>
         </section>
 
@@ -172,7 +212,7 @@ export function EditPage() {
             <button
               type="button"
               className="btn-outline edit__play-all"
-              onClick={() => togglePreview('all', edit.tracks.map(toSegment))}
+              onClick={() => togglePreview('all', withFades(edit.tracks.map(toSegment), edit.crossfade > 0))}
               aria-pressed={playingKey === 'all'}
             >
               {playingKey === 'all' ? <PauseIcon size={24} /> : <PlayIcon size={24} />}

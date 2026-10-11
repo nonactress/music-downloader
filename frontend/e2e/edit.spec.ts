@@ -2,7 +2,7 @@
 import { expect, test } from '@playwright/test'
 import { openEditHome, routeAudio, shot } from './fixtures'
 
-test('③ 노래 카드 · 전체 길이 · 3단계 범위(결정 32)', async ({ page }) => {
+test('③ 노래 카드 · 전체 길이 · 4단계 전체 영역(결정 43)', async ({ page }) => {
   await openEditHome(page)
   const card = page.getByRole('article', { name: '1번 노래' })
   await expect(card.getByText('[노래 제목]')).toBeVisible()
@@ -23,9 +23,8 @@ test('③ 노래 카드 · 전체 길이 · 3단계 범위(결정 32)', async ({
   for (const name of ['위로', '아래로', '빼기']) {
     await expect(card.getByRole('button', { name, exact: true })).toBeDisabled()
   }
-  await expect(page.getByText('노래 사이 부드럽게 잇기')).toHaveCount(0)
-  await expect(page.getByText('소리 크기 고르게 맞추기')).toHaveCount(0)
-  await expect(page.getByRole('checkbox')).toHaveCount(0)
+  await expect(page.getByRole('checkbox', { name: /노래 사이 부드럽게 잇기/ })).toBeChecked()
+  await expect(page.getByRole('checkbox', { name: /소리 크기 고르게 맞추기/ })).toBeChecked()
   await shot(page, '03-edit-home-initial')
 })
 
