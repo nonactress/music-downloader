@@ -1,14 +1,15 @@
 """POST /tracks (CONTRACT 2-1)."""
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from .. import queue, store
+from ..ratelimit import limit_per_ip
 from ..schemas import TrackRequest
 from ..youtube import normalize_url
 
 router = APIRouter()
 
 
-@router.post("/tracks", status_code=202)
+@router.post("/tracks", status_code=202, dependencies=[Depends(limit_per_ip)])
 def create_track(body: TrackRequest) -> dict:
     url = normalize_url(body.url)
     job = store.create_job("extract")

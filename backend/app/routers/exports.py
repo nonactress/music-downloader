@@ -1,12 +1,13 @@
 """POST /exports, GET /exports/{id}/download (CONTRACT 2-5, 2-6)."""
 from urllib.parse import quote
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from fastapi.responses import FileResponse
 
 from .. import config, queue, store
 from ..errors import ApiError
 from ..ffmpeg_builder import TrackEdit, validate
+from ..ratelimit import limit_per_ip
 from ..schemas import EditJson
 
 router = APIRouter()
@@ -41,7 +42,7 @@ def _check_edit(edit: EditJson) -> None:
         raise ApiError("INVALID_EDIT", str(e))
 
 
-@router.post("/exports", status_code=202)
+@router.post("/exports", status_code=202, dependencies=[Depends(limit_per_ip)])
 def create_export(edit: EditJson) -> dict:
     _check_edit(edit)
     job = store.create_job("export")
