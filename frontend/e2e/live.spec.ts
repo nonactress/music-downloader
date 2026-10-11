@@ -66,3 +66,19 @@ test('실제 백엔드: 자르기 → 저장 → 다운로드 길이 = 남긴 �
   expect(sec).toBeGreaterThan(9.006 - 0.1)
   expect(sec).toBeLessThan(9.006 + 0.1)
 })
+
+test('실제 백엔드: 빠르기 1.25배 → 저장 → 다운로드 길이 = (end−start)/1.25', async ({ page }) => {
+  test.setTimeout(240_000)
+  await importToEditHome(page)
+  await page.getByRole('button', { name: '빠르기', exact: true }).click()
+  await page.getByRole('group', { name: '빠르기 고르기' }).getByRole('button', { name: /빠르게/ }).click()
+  await page.getByRole('button', { name: '완료, 목록으로' }).click()
+
+  // 19.006초 / 1.25 = 15.2048초
+  await expect(page.getByText('15초 · 빠르게 1.25배')).toBeVisible()
+  const mp3 = await saveAndDownload(page)
+  await expect(page.getByText(/노래 1곡 · 15초 · /)).toBeVisible()
+  const sec = probeDuration(mp3)
+  expect(sec).toBeGreaterThan(19.006 / 1.25 - 0.1)
+  expect(sec).toBeLessThan(19.006 / 1.25 + 0.1)
+})
