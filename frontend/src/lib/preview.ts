@@ -22,26 +22,36 @@ let queue: Segment[] = []
 let index = 0
 let frame = 0
 let runId = 0
+/** 다음 구간으로 넘어가는 중 — rAF와 timeupdate가 같은 끝을 두 번 처리하지 않게 */
+let advancing = false
 
 function getAudio(): HTMLAudioElement {
   if (!audio) {
     audio = new Audio()
     audio.preload = 'auto'
     audio.addEventListener('ended', () => next())
+    // 다른 탭에 가면 requestAnimationFrame이 멈추므로 timeupdate로도 끝을 확인한다 (먼저 오는 쪽)
+    audio.addEventListener('timeupdate', () => checkEnd())
     audio.addEventListener('error', () => usePreview.getState().stop())
   }
   return audio
 }
 
+/** 지금 구간의 끝을 지났으면 다음으로. 넘어갔으면 true */
+function checkEnd(): boolean {
+  if (advancing || !audio || queue.length === 0) return false
+  const seg = queue[index]
+  if (seg && audio.currentTime >= seg.end) {
+    next()
+    return true
+  }
+  return false
+}
+
 function watchEnd(id: number) {
   cancelAnimationFrame(frame)
   const tick = () => {
-    if (id !== runId || !audio) return
-    const seg = queue[index]
-    if (seg && audio.currentTime >= seg.end) {
-      next()
-      return
-    }
+    if (id !== runId || checkEnd()) return
     frame = requestAnimationFrame(tick)
   }
   frame = requestAnimationFrame(tick)
@@ -55,6 +65,7 @@ async function playAt(i: number, id: number) {
     return
   }
   index = i
+  advancing = true
   const url = new URL(seg.src, location.href).href
   if (a.src !== url) {
     a.src = url
@@ -75,6 +86,7 @@ async function playAt(i: number, id: number) {
   a.playbackRate = seg.speed
   a.preservesPitch = seg.keepPitch
   a.currentTime = seg.start
+  advancing = false
   try {
     await a.play()
   } catch {
@@ -85,8 +97,10 @@ async function playAt(i: number, id: number) {
 }
 
 function next() {
-  if (index + 1 < queue.length) void playAt(index + 1, runId)
-  else usePreview.getState().stop()
+  if (index + 1 < queue.length) {
+    advancing = true
+    void playAt(index + 1, runId)
+  } else usePreview.getState().stop()
 }
 
 export const usePreview = create<PreviewStore>((set, get) => ({
@@ -107,6 +121,7 @@ export const usePreview = create<PreviewStore>((set, get) => ({
 
   stop: () => {
     runId += 1
+    advancing = false
     cancelAnimationFrame(frame)
     audio?.pause()
     queue = []
