@@ -3,7 +3,7 @@ from celery import Celery
 
 from app import config
 
-celery_app = Celery("worker", broker=config.REDIS_URL, include=["worker.tasks.extract"])
+celery_app = Celery("worker", broker=config.REDIS_URL, include=["worker.tasks.extract", "worker.tasks.export"])
 celery_app.conf.update(
     task_acks_late=True,
     worker_prefetch_multiplier=1,
