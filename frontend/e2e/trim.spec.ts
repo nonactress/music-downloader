@@ -133,3 +133,21 @@ test('③ [처음 상태로 되돌리기] → 알림 + 되돌리기, 저장하�
   await expect(page.getByRole('heading', { name: '노래를 만들고 있어요' })).toBeVisible()
   expect(posted!.tracks[0]).toMatchObject({ start: 10, end: 200 })
 })
+
+test('미리듣기는 rAF가 멈춰도(다른 탭) 구간 끝에서 멈춘다 — timeupdate', async ({ page }) => {
+  // 백그라운드 탭처럼 requestAnimationFrame이 전혀 돌지 않게
+  await page.addInitScript(() => {
+    window.requestAnimationFrame = () => 0
+  })
+  await routeAudio(page)
+  await openEditHome(page)
+  await openTrim(page)
+  const down = group(page, '끝').getByRole('button', { name: '−5초' })
+  while (await down.isEnabled()) await down.click()
+  await expect(page.getByText('남는 길이 1초')).toBeVisible()
+
+  await page.getByRole('button', { name: '남긴 부분 들어보기' }).click()
+  await expect(page.getByRole('button', { name: '멈추기' })).toBeVisible()
+  // 원곡은 225초 — 끝(1초)을 못 보면 계속 재생된다
+  await expect(page.getByRole('button', { name: '남긴 부분 들어보기' })).toBeVisible({ timeout: 4000 })
+})
