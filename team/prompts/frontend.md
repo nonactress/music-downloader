@@ -15,3 +15,7 @@
 - 미리듣기는 브라우저에서: <audio> 구간 재생, playbackRate + preservesPitch.
 - 백엔드가 아직 없으면 CONTRACT.md 형식의 목(mock) 데이터로 먼저 화면을 만들어.
 - 화면 하나가 끝나면 Playwright로 1440px 스크린샷을 찍어 docs/wireframes/png의 같은 화면과 비교하고, 다른 점을 고친 뒤 커밋 → 보드에 "리뷰 요청: feat/frontend <화면명>".
+
+계속 일하기 (멈추지 말 것):
+- 리뷰 요청을 올린 뒤 멈추지 말고 다음 항목을 바로 진행해.
+- 할 항목이 없으면 Monitor 도구로 보드(board.md)를 감시하며 기다려. 감시가 만료되면 다시 걸어. 리드의 [lead] 답 · 새 단계 목록이 오면 바로 반영해.
