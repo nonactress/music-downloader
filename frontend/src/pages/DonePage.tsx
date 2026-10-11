@@ -10,6 +10,7 @@ import { useFlowStore } from '../store/flowStore'
 export function DonePage() {
   const result = useFlowStore((s) => s.exportResult)
   const goImport = useFlowStore((s) => s.goImport)
+  const goEdit = useFlowStore((s) => s.goEdit)
   const audioRef = useRef<HTMLAudioElement>(null)
   const [playing, setPlaying] = useState(false)
 
@@ -79,7 +80,7 @@ export function DonePage() {
         </a>
 
         <div className="done__more">
-          {/* [다시 고치러 가기]는 편집 홈과 함께 2단계에서 표시 (PLAN 결정 11) */}
+          <button type="button" className="btn-outline" onClick={goEdit}>다시 고치러 가기</button>
           <button type="button" className="btn-outline" onClick={startNew}>새 노래 만들기</button>
         </div>
       </main>

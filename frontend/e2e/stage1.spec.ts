@@ -1,45 +1,13 @@
-// 1단계 화면 ① ② ⑦ — /api를 CONTRACT 형식 응답으로 가로채서 확인하고 1440px 스크린샷을 남긴다.
-import { expect, test, type Page, type Route } from '@playwright/test'
-
-const SHOTS = 'e2e/screenshots'
-const URL_OK = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
-
-// 와이어프레임 자리표시 문구와 같은 값으로 채워 비교하기 쉽게 한다
-const track = {
-  trackId: 't1',
-  title: '[노래 제목]',
-  channel: '[채널 이름]',
-  durationSec: 225,
-  thumbnailUrl: '',
-}
-
-const json = (route: Route, body: unknown, status = 200) =>
-  route.fulfill({ status, contentType: 'application/json; charset=utf-8', body: JSON.stringify(body) })
-
-const extractRunning = (progress: number, etaSeconds: number | null) => ({
-  jobId: 'j1', kind: 'extract', status: 'running', progress, etaSeconds, track, result: null, error: null,
-})
-const extractDone = {
-  jobId: 'j1', kind: 'extract', status: 'done', progress: 100, etaSeconds: 0, track, result: { track }, error: null,
-}
-const exportDone = {
-  jobId: 'j2', kind: 'export', status: 'done', progress: 100, etaSeconds: 0, track: null,
-  result: { exportId: 'e1', fileName: '내 노래_1011.mp3', trackCount: 2, durationSec: 380, sizeBytes: 6082560 },
-  error: null,
-}
-
-async function submitUrl(page: Page) {
-  await page.route('**/api/tracks', (r) => json(r, { jobId: 'j1', trackId: 't1' }, 202))
-  await page.goto('/')
-  await page.getByLabel('유튜브 주소').fill(URL_OK)
-  await page.getByRole('button', { name: '노래 불러오기' }).click()
-}
+// 화면 ① ② ⑦ + 저장 대기 — 흐름 · 에러 확인과 1440px 스크린샷
+import { expect, test } from '@playwright/test'
+import {
+  URL_OK, exportDone, exportRunning, extractRunning, json, openEditHome, shot, submitUrl,
+} from './fixtures'
 
 test('① 노래 가져오기', async ({ page }) => {
   await page.goto('/')
   await expect(page.getByRole('heading', { name: '유튜브 주소를 넣어주세요' })).toBeVisible()
-  await page.evaluate(() => document.fonts.ready)
-  await page.screenshot({ path: `${SHOTS}/01-import.png`, fullPage: true })
+  await shot(page, '01-import')
 })
 
 test('① 유튜브가 아닌 주소는 서버에 보내지 않고 안내', async ({ page }) => {
@@ -61,15 +29,13 @@ test('① 서버 4xx는 error.message를 그대로', async ({ page }) => {
   await expect(page.getByRole('alert')).toHaveText('요청이 너무 많아요. 잠시 후 다시 시도해 주세요.')
 })
 
-test('② 불러오는 중', async ({ page }) => {
-  // 추출 75% = 화면 60% (추출이 막대의 80%)
-  await page.route('**/api/jobs/j1', (r) => json(r, extractRunning(75, 20)))
+test('② 불러오는 중 — 추출만 0→100 (결정 21)', async ({ page }) => {
+  await page.route('**/api/jobs/j1', (r) => json(r, extractRunning(60, 20)))
   await submitUrl(page)
   await expect(page.getByText('60% 완료')).toBeVisible()
   await expect(page.getByText('약 20초 남았어요')).toBeVisible()
   await expect(page.getByText('[채널 이름] · 3분 45초')).toBeVisible()
-  await page.evaluate(() => document.fonts.ready)
-  await page.screenshot({ path: `${SHOTS}/02-loading.png`, fullPage: true })
+  await shot(page, '02-loading')
 
   await page.getByRole('button', { name: '취소하고 돌아가기' }).click()
   await expect(page.getByRole('heading', { name: '유튜브 주소를 넣어주세요' })).toBeVisible()
@@ -78,7 +44,7 @@ test('② 불러오는 중', async ({ page }) => {
 test('② etaSeconds가 null이면 남은 시간 숨김', async ({ page }) => {
   await page.route('**/api/jobs/j1', (r) => json(r, extractRunning(10, null)))
   await submitUrl(page)
-  await expect(page.getByText('8% 완료')).toBeVisible()
+  await expect(page.getByText('10% 완료')).toBeVisible()
   await expect(page.getByText(/남았어요/)).toHaveCount(0)
 })
 
@@ -94,25 +60,63 @@ test('② 작업 failed는 error.message + 다시 해보기', async ({ page }) =
   await expect(page.getByLabel('유튜브 주소')).toHaveValue(URL_OK)
 })
 
-test('② → ⑦ 추출 done이면 기본 Edit JSON으로 내보내기', async ({ page }) => {
+test('③ → 저장 대기 → ⑦ → [다시 고치러 가기] → ③', async ({ page }) => {
   let posted: unknown = null
-  await page.route('**/api/jobs/j1', (r) => json(r, extractDone))
+  let exportDoneNow = false
   await page.route('**/api/exports', (r) => {
     posted = r.request().postDataJSON()
     return json(r, { jobId: 'j2', exportId: 'e1' }, 202)
   })
-  await page.route('**/api/jobs/j2', (r) => json(r, exportDone))
-  await submitUrl(page)
+  await page.route('**/api/jobs/j2', (r) => json(r, exportDoneNow ? exportDone() : exportRunning(40, 12)))
+  await openEditHome(page)
 
-  await expect(page.getByRole('heading', { name: '노래가 완성됐어요!' })).toBeVisible()
+  await page.getByRole('button', { name: '다 됐어요, 저장하기' }).click()
+  await expect(page.getByRole('heading', { name: '노래를 만들고 있어요' })).toBeVisible()
+  await expect(page.getByText('40% 완료')).toBeVisible()
+  await expect(page.getByText('자동으로 저장 화면')).toBeVisible()
+  await expect(page.getByRole('listitem').filter({ hasText: '저장하기' })).toHaveAttribute('aria-current', 'step')
   expect(posted).toEqual({
     tracks: [{ sourceId: 't1', start: 0, end: 225, speed: 1.0, keepPitch: true }],
     crossfade: 2,
     normalize: true,
     format: 'mp3',
   })
+  await shot(page, 'saving')
+
+  exportDoneNow = true
+  await expect(page.getByRole('heading', { name: '노래가 완성됐어요!' })).toBeVisible()
   await expect(page.getByText('노래 2곡 · 6분 20초 · 5.8MB')).toBeVisible()
   await expect(page.getByRole('link', { name: '내 컴퓨터에 저장하기' })).toHaveAttribute('href', '/api/exports/e1/download')
-  await page.evaluate(() => document.fonts.ready)
-  await page.screenshot({ path: `${SHOTS}/07-done.png`, fullPage: true })
+  await shot(page, '07-done')
+
+  await page.getByRole('button', { name: '다시 고치러 가기' }).click()
+  await expect(page.getByRole('heading', { name: '노래를 다듬어 주세요' })).toBeVisible()
+})
+
+test('저장 대기 [취소하고 돌아가기] → ③, 실패는 [다시 해보기] → ③', async ({ page }) => {
+  let fail = false
+  await page.route('**/api/exports', (r) => json(r, { jobId: 'j2', exportId: 'e1' }, 202))
+  await page.route('**/api/jobs/j2', (r) =>
+    json(r, fail
+      ? { ...exportRunning(30, null), status: 'failed', error: { code: 'EXPORT_FAILED', message: '노래를 만들지 못했어요. 잠시 후 다시 시도해 주세요.' } }
+      : exportRunning(10, null)))
+  await openEditHome(page)
+
+  await page.getByRole('button', { name: '다 됐어요, 저장하기' }).click()
+  await page.getByRole('button', { name: '취소하고 돌아가기' }).click()
+  await expect(page.getByRole('heading', { name: '노래를 다듬어 주세요' })).toBeVisible()
+
+  fail = true
+  await page.getByRole('button', { name: '다 됐어요, 저장하기' }).click()
+  await expect(page.getByRole('alert')).toHaveText('노래를 만들지 못했어요. 잠시 후 다시 시도해 주세요.')
+  await page.getByRole('button', { name: '다시 해보기' }).click()
+  await expect(page.getByRole('heading', { name: '노래를 다듬어 주세요' })).toBeVisible()
+})
+
+test('③ POST /exports 4xx는 편집 홈에 message 그대로', async ({ page }) => {
+  await page.route('**/api/exports', (r) =>
+    json(r, { error: { code: 'NOT_FOUND', message: '노래를 찾을 수 없어요. 처음부터 다시 해주세요.' } }, 404))
+  await openEditHome(page)
+  await page.getByRole('button', { name: '다 됐어요, 저장하기' }).click()
+  await expect(page.getByRole('alert')).toHaveText('노래를 찾을 수 없어요. 처음부터 다시 해주세요.')
 })

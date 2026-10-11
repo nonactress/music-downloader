@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { resultDuration, useEditStore } from './editStore'
+import { resultDuration, selectLastChange, trimState, useEditStore } from './editStore'
 
 const info = (id: string, durationSec: number) => ({
   trackId: id,
@@ -9,28 +9,63 @@ const info = (id: string, durationSec: number) => ({
   thumbnailUrl: '',
 })
 
-describe('editStore', () => {
-  beforeEach(() => useEditStore.getState().reset())
+const st = () => useEditStore.getState()
 
-  it('노래를 추가하면 CONTRACT 3-3 기본값', () => {
-    useEditStore.getState().addTrack(info('t1', 224.83))
-    expect(useEditStore.getState().edit).toEqual({
+describe('editStore', () => {
+  beforeEach(() => st().reset())
+
+  it('노래를 추가하면 CONTRACT 3-3 기본값, 되돌리기 대상 아님', () => {
+    st().addTrack(info('t1', 224.83))
+    expect(st().edit).toEqual({
       tracks: [{ sourceId: 't1', start: 0, end: 224.83, speed: 1.0, keepPitch: true }],
       crossfade: 2,
       normalize: true,
       format: 'mp3',
     })
+    expect(st().history).toHaveLength(0)
   })
 
-  it('되돌리기는 바로 전 Edit JSON으로', () => {
-    const s = useEditStore.getState()
-    s.addTrack(info('t1', 100))
-    s.apply((e) => ({ ...e, normalize: false }))
-    expect(useEditStore.getState().edit.normalize).toBe(false)
-    useEditStore.getState().undo()
-    expect(useEditStore.getState().edit.normalize).toBe(true)
-    useEditStore.getState().undo()
-    expect(useEditStore.getState().edit.tracks).toHaveLength(0)
+  it('같은 노래를 두 번 넣지 않는다', () => {
+    st().addTrack(info('t1', 100))
+    st().addTrack(info('t1', 100))
+    expect(st().edit.tracks).toHaveLength(1)
+  })
+
+  it('commit · undo — 알림은 남은 마지막 변경', () => {
+    st().addTrack(info('t1', 100))
+    const e0 = st().edit
+    st().commit({ ...e0, normalize: false }, { prefix: 'A' })
+    st().commit({ ...st().edit, crossfade: 0 }, { prefix: 'B' })
+    expect(selectLastChange(st())?.prefix).toBe('B')
+    st().undo()
+    expect(st().edit.crossfade).toBe(2)
+    expect(selectLastChange(st())?.prefix).toBe('A')
+    st().undo()
+    expect(st().edit).toEqual(e0)
+    expect(selectLastChange(st())).toBeNull()
+  })
+
+  it('setLive 여러 번 + recordSince = 되돌리기 1번 (결정 22)', () => {
+    st().addTrack(info('t1', 100))
+    const before = st().edit
+    const t = before.tracks[0]
+    st().setLive({ ...before, tracks: [{ ...t, start: 5 }] })
+    st().setLive({ ...before, tracks: [{ ...t, start: 10, end: 90 }] })
+    st().recordSince(before, { prefix: '잘랐어요', trackIndex: 0 })
+    expect(st().history).toHaveLength(1)
+    st().undo()
+    expect(st().edit).toEqual(before)
+  })
+})
+
+describe('trimState', () => {
+  const t = (start: number, end: number) => ({ sourceId: 'a', start, end, speed: 1, keepPitch: true })
+  it('앞 · 뒤 · 앞뒤 · 없음', () => {
+    expect(trimState(t(0, 100), 100)).toBe('none')
+    expect(trimState(t(0, 99.97), 100)).toBe('none')
+    expect(trimState(t(5, 100), 100)).toBe('front')
+    expect(trimState(t(0, 95), 100)).toBe('back')
+    expect(trimState(t(5, 95), 100)).toBe('both')
   })
 })
 

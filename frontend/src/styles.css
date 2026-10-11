@@ -24,6 +24,7 @@
   --h-btn-md: 64px;
   --h-btn-lg: 68px;
   --h-input-lg: 80px;
+  --h-cta-sm: 76px;
   --h-cta: 88px;
   --h-cta-xl: 92px;
 
@@ -170,3 +171,17 @@ a:hover { color: var(--c-primary-hover); }
 @media (prefers-reduced-motion: reduce) {
   .progress__bar { transition: none; }
 }
+
+/* ── ③ 편집 홈 ─────────────────────────── */
+.edit { width: 100%; max-width: 1200px; margin: 0 auto; padding: 32px 40px 40px; display: flex; flex-direction: column; gap: 22px; flex: 1; }
+.edit__title { display: flex; flex-direction: column; gap: 6px; }
+.edit__h1 { margin: 0; font-size: 36px; font-weight: 700; }
+.edit__footer {
+  margin-top: auto; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px;
+  padding: 20px 24px; border-radius: 18px; background: var(--c-surface); border: 2px solid var(--c-line);
+}
+.edit__save {
+  height: var(--h-cta-sm); padding: 0 40px; display: flex; align-items: center; gap: 12px; border: none;
+  border-radius: 18px; background: var(--c-text); color: #fff; font-size: 24px; font-weight: 700;
+}
+.edit__save:disabled { background: #8a8a86; }
