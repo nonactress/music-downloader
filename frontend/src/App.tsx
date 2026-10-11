@@ -12,6 +12,8 @@ const TITLES = {
   loading: '불러오는 중',
   edit: '노래 다듬기',
   trim: '한 곡 잘라내기',
+  speed: '한 곡 빠르기',
+  speedAll: '모든 노래 빠르기',
   saving: '노래 만드는 중',
   done: '저장 완료',
 } as const
@@ -25,7 +27,8 @@ export function App() {
   }, [screen])
 
   if (screen === 'loading') return <LoadingPage />
-  if (screen === 'edit') return <EditPage />
+  // 빠르기 화면은 F14 · F15에서 연결 — 그 전까지는 편집 홈
+  if (screen === 'edit' || screen === 'speed' || screen === 'speedAll') return <EditPage />
   if (screen === 'trim') return <TrimPage />
   if (screen === 'saving') return <SavingPage />
   if (screen === 'done') return <DonePage />

@@ -281,3 +281,22 @@ a:hover { color: var(--c-primary-hover); }
 .trim__footer { margin-top: auto; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; }
 .trim__cancel { height: var(--h-btn); }
 .trim__done { height: var(--h-cta-sm); padding: 0 44px; gap: 12px; border-radius: 18px; font-size: 24px; }
+
+/* "모든 노래에 한 번에 적용" — 3단계는 [모든 노래 빠르기 바꾸기]만 (결정 32) */
+.apply-all {
+  padding: 24px; border-radius: 18px; background: var(--c-surface); border: 2px solid var(--c-text);
+  display: flex; flex-direction: column; gap: 16px;
+}
+.apply-all__title { margin: 0; display: flex; align-items: center; gap: 10px; font-size: 26px; font-weight: 700; }
+.apply-all__row { display: flex; flex-wrap: wrap; gap: 12px; }
+/* 와이어프레임에선 3칸이 한 줄 — 혼자 있어도 같은 너비 */
+.apply-all__tile {
+  flex: 1 1 300px; max-width: calc((100% - 24px) / 3); min-height: 76px; padding: 10px 20px;
+  display: flex; align-items: center; gap: 14px; text-align: left;
+  border: 2px solid var(--c-text); border-radius: 14px; background: var(--c-bg); color: var(--c-text);
+}
+.apply-all__tile svg { flex-shrink: 0; }
+.apply-all__text { display: flex; flex-direction: column; }
+.apply-all__name { font-size: 21px; font-weight: 700; }
+.apply-all__sub { font-size: 20px; color: var(--c-text-sub); }
+@media (max-width: 900px) { .apply-all__tile { max-width: none; } }

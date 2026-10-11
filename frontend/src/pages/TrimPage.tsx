@@ -14,7 +14,7 @@ import { isSameEdit, trackDuration, trimState, useEditStore } from '../store/edi
 import { useFlowStore } from '../store/flowStore'
 
 export function TrimPage() {
-  const index = useFlowStore((s) => s.trimIndex)
+  const index = useFlowStore((s) => s.songIndex)
   const goEdit = useFlowStore((s) => s.goEdit)
   const edit = useEditStore((s) => s.edit)
   const trackInfo = useEditStore((s) => s.trackInfo)

@@ -47,6 +47,8 @@ export interface Change {
   suffix?: string
   /** "방금 바뀜"을 붙일 노래 (0부터) */
   trackIndex?: number
+  /** 모든 노래에 "방금 바뀜" (모든 노래 빠르기, 결정 29) */
+  allTracks?: boolean
 }
 
 interface HistoryEntry {
