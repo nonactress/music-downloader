@@ -158,10 +158,16 @@ def test_not_ready(client, kind, status):
 
 
 @pytest.mark.parametrize("kind", ["audio", "peaks"])
-def test_not_found_cases(client, kind):
-    assert client.get(f"/tracks/t_nope/{kind}").status_code == 404
+def test_extract_failed_is_404(client, kind):
+    """CONTRACT v1.3: 추출이 실패한 노래 → 404 NOT_FOUND (409 아님)."""
     failed = _track(status="failed", audio=None, peaks=False)
-    assert client.get(f"/tracks/{failed}/{kind}").status_code == 404
+    res = client.get(f"/tracks/{failed}/{kind}")
+    assert res.status_code == 404 and res.json()["error"]["code"] == "NOT_FOUND"
+
+
+@pytest.mark.parametrize("kind", ["audio", "peaks"])
+def test_missing_or_deleted_is_404(client, kind):
+    assert client.get(f"/tracks/t_nope/{kind}").status_code == 404
     deleted = _track(audio=None, peaks=False)  # 24시간 정리로 파일만 지워진 경우
     res = client.get(f"/tracks/{deleted}/{kind}")
     assert res.status_code == 404 and res.json()["error"]["code"] == "NOT_FOUND"
