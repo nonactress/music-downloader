@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import math
+import re
 import subprocess
 from pathlib import Path
 
@@ -95,3 +96,25 @@ def write_peaks(path: Path, track_id: str, duration: float, peaks: list[float]) 
     tmp = path.with_suffix(".tmp")
     tmp.write_text(json.dumps(data, separators=(",", ":")))
     tmp.replace(path)
+
+
+_LOUDNESS_RE = re.compile(r"^\s*I:\s*(-?[\d.]+|-inf)\s*LUFS", re.MULTILINE)
+_PEAK_RE = re.compile(r"^\s*Peak:\s*(-?[\d.]+|-inf)\s*dBFS", re.MULTILINE)
+SILENCE_LUFS = -70.0
+
+
+def measure_loudness(path: Path, start: float, end: float) -> tuple[float, float]:
+    """남길 구간의 소리 크기(통합 LUFS)와 최대값(true peak dBFS). ebur128 — 길이에 비례해 빠름."""
+    err = _run([
+        "ffmpeg", "-hide_banner", "-nostdin", "-nostats", "-v", "info",
+        "-ss", f"{start:.3f}", "-to", f"{end:.3f}", "-i", str(path),
+        "-af", "ebur128=peak=true:framelog=quiet",
+        "-f", "null", "-",
+    ]).stderr.decode("utf-8", "replace")
+    loud, peak = _LOUDNESS_RE.findall(err), _PEAK_RE.findall(err)
+    if not loud or not peak:
+        raise MediaError(f"ebur128 결과를 읽지 못함: {err[-300:]!r}")
+
+    def _f(v: str) -> float:
+        return SILENCE_LUFS if v == "-inf" else float(v)
+    return _f(loud[-1]), _f(peak[-1])

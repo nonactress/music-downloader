@@ -2,3 +2,5 @@
 pythonpath = [".", ".."]
 testpaths = ["tests", "../worker/tests"]
 filterwarnings = ["ignore:Using `httpx`"]
+markers = ["slow: 오래 걸리는 측정 테스트 (기본 실행에서 제외, `pytest -m slow`로 실행)"]
+addopts = "-m 'not slow'"

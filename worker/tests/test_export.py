@@ -94,3 +94,36 @@ def test_parse_out_time():
     assert export._parse_out_time("out_time_ms=1000000") == 1.0
     assert export._parse_out_time("out_time_us=N/A") is None
     assert export._parse_out_time("progress=continue") is None
+
+
+@needs_ffmpeg
+def test_measure_loudness_tracks_volume(tmp_path):
+    """같은 소리를 6dB 키우면 소리 크기 · 최대값도 6dB 커진다."""
+    import subprocess
+
+    def tone(name, vol):
+        p = tmp_path / name
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi",
+                        "-i", "sine=frequency=1000:sample_rate=44100:duration=6",
+                        "-af", f"volume={vol}dB", "-ac", "2", str(p)], check=True)
+        return media.measure_loudness(p, 1, 5)
+
+    l0, p0 = tone("a.mp3", 0)
+    l6, p6 = tone("b.mp3", 6)
+    assert l6 - l0 == pytest.approx(6, abs=0.3)
+    assert p6 - p0 == pytest.approx(6, abs=0.3)
+    assert p6 < 0
+
+
+@needs_ffmpeg
+def test_export_normalize_reaches_target(tmp_path):
+    quiet = _source(tmp_path, 6, 440)   # make_tone 기본 진폭 1/8 → 조용한 곡
+    edit = {"tracks": [{"sourceId": quiet, "start": 0, "end": 6, "speed": 1.0, "keepPitch": True}],
+            "crossfade": 0, "normalize": True, "format": "mp3"}
+    job_id, export_id = _new_export()
+    export.run_export(job_id, export_id, edit)
+    assert store.get_job(job_id)["status"] == "done"
+    lufs, peak = media.measure_loudness(config.export_path(export_id), 0.5, 5.5)
+    # 목표 -16 LUFS, 단 최대값 -1.5 dBFS를 넘지 않음
+    assert peak <= -1.0
+    assert lufs == pytest.approx(-16, abs=1.5) or peak == pytest.approx(-1.5, abs=0.6)

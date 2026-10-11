@@ -79,7 +79,7 @@ curl -s localhost:8000/jobs/<jobId>
 | `TZ` | `Asia/Seoul` | 결과 파일 이름 `내 노래_MMDD.mp3`의 날짜 기준 |
 | `RATE_LIMIT_PER_MINUTE` | `10` | IP · 경로별 분당 `POST /tracks`, `POST /exports` 수 (넘으면 429) |
 | `EXTRACT_TIMEOUT_SEC` | `300` | 추출 작업 제한 시간 (넘으면 `TIMEOUT`) |
-| `EXPORT_TIMEOUT_SEC` | `600` | 렌더링 작업 제한 시간 (넘으면 `TIMEOUT`) |
+| `EXPORT_TIMEOUT_SEC` | `900` | 렌더링 작업 제한 시간 (넘으면 `TIMEOUT`). 최악 경우(20분 × 20곡) 실측 176초 |
 
 ## 테스트
 
@@ -90,6 +90,8 @@ cd backend && ../.venv/bin/pytest        # backend/tests + worker/tests
 - Redis는 `fakeredis`로 대신하므로 redis-server가 없어도 된다.
 - ffmpeg가 있으면 실제 변환 · 렌더링 테스트까지 돈다 (없으면 그 테스트만 건너뜀).
 - yt-dlp는 가짜로 바꿔서 테스트한다 → 유튜브 접속 없이 돈다. 실제 유튜브 확인은 위 "빠른 확인"으로.
+- 느린 측정 테스트는 기본 실행에서 빠진다. 최악 경우 렌더링(20분 × 20곡, 약 3분):
+  `../.venv/bin/pytest -m slow -s tests/test_render_worst_case.py` (작게: `WORST_TRACKS=4 WORST_MINUTES=5` 앞에 붙이기)
 
 ## 안전장치 (PLAN 12장)
 
