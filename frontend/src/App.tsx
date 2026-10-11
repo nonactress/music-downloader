@@ -5,6 +5,7 @@ import { LoadingPage } from './pages/LoadingPage'
 import { DonePage } from './pages/DonePage'
 import { EditPage } from './pages/EditPage'
 import { SavingPage } from './pages/SavingPage'
+import { SpeedPage } from './pages/SpeedPage'
 import { TrimPage } from './pages/TrimPage'
 
 const TITLES = {
@@ -27,8 +28,9 @@ export function App() {
   }, [screen])
 
   if (screen === 'loading') return <LoadingPage />
-  // 빠르기 화면은 F14 · F15에서 연결 — 그 전까지는 편집 홈
-  if (screen === 'edit' || screen === 'speed' || screen === 'speedAll') return <EditPage />
+  // 모든 노래 빠르기 화면은 F15에서 연결 — 그 전까지는 편집 홈
+  if (screen === 'edit' || screen === 'speedAll') return <EditPage />
+  if (screen === 'speed') return <SpeedPage />
   if (screen === 'trim') return <TrimPage />
   if (screen === 'saving') return <SavingPage />
   if (screen === 'done') return <DonePage />
