@@ -25,6 +25,8 @@ worker는 `backend/app`의 `config` · `store` · `ffmpeg_builder` · `error_cod
 
 ## Docker로 실행
 
+> (아직 실기 확인 전 — Docker 있는 PC 필요)
+
 ```bash
 docker compose up --build        # 레포 루트에서. api :8000, worker(+beat), redis :6379
 ```
