@@ -361,3 +361,20 @@ a:hover { color: var(--c-primary-hover); }
 .warn-box__body { display: flex; flex-direction: column; gap: 4px; }
 .warn-box__title { font-size: 21px; font-weight: 700; }
 .warn-box__line { font-size: 20px; line-height: 1.5; }
+
+/* "노래 하나 더 붙이기" 점선 상자 */
+.append {
+  padding: 18px 20px; border-radius: 18px; border: 3px dashed #8a8a86; background: var(--c-bg);
+  display: flex; flex-direction: column; gap: 12px;
+}
+.append__label { font-size: 21px; font-weight: 700; }
+.append__row { display: flex; flex-wrap: wrap; gap: 12px; }
+.append__input {
+  flex: 999 1 360px; min-width: 0; height: var(--h-btn-md); padding: 0 20px;
+  border: 2px solid var(--c-text); border-radius: 14px; background: var(--c-surface); font-size: 20px;
+}
+.append__input:disabled { border-color: #c4c4bf; background: #f0f0ec; }
+.append__input[aria-invalid='true'] { border-color: var(--c-danger); }
+.append__btn { flex: 1 1 180px; height: var(--h-btn-md); border-radius: 14px; font-size: 21px; }
+.append__btn:disabled { border-color: #c4c4bf; background: #f0f0ec; color: #8a8a86; }
+.append__full { margin: 0; font-size: 20px; font-weight: 600; color: var(--c-text-sub); }

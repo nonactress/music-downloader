@@ -17,11 +17,12 @@ test('③ 노래 카드 · 전체 길이 · 3단계 범위(결정 32)', async ({
   await expect(page.getByText('방금 바뀜')).toHaveCount(0)
   await expect(page.getByRole('button', { name: '처음 상태로 되돌리기' })).toBeDisabled()
 
-  for (const hidden of ['위로', '아래로', '빼기', '불러와서 붙이기']) {
+  await expect(page.getByLabel('노래 하나 더 붙이기')).toBeVisible()
+  await expect(page.getByRole('button', { name: '불러와서 붙이기' })).toBeVisible()
+  for (const hidden of ['위로', '아래로', '빼기']) {
     await expect(page.getByRole('button', { name: hidden, exact: true })).toHaveCount(0)
     await expect(page.getByRole('link', { name: hidden, exact: true })).toHaveCount(0)
   }
-  await expect(page.getByText('노래 하나 더 붙이기')).toHaveCount(0)
   await expect(page.getByText('노래 사이 부드럽게 잇기')).toHaveCount(0)
   await expect(page.getByText('소리 크기 고르게 맞추기')).toHaveCount(0)
   await expect(page.getByRole('checkbox')).toHaveCount(0)
