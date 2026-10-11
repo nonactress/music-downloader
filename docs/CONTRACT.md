@@ -213,7 +213,7 @@
 | `tracks[].speed` | number | 빠르기 배수. 1.0 = 원래 빠르기 |
 | `tracks[].keepPitch` | boolean | `true` = 목소리 높낮이 유지 (`atempo`), `false` = `asetrate` |
 | `crossfade` | number | 노래 사이 부드럽게 잇기 길이(초). `0` = 끔 |
-| `normalize` | boolean | 소리 크기 고르게 맞추기 (`loudnorm`) |
+| `normalize` | boolean | 소리 크기 고르게 맞추기 (곡마다 목표 -16 LUFS · 최대 -1.5 dBFS로 음량 맞춤) |
 | `format` | string | `"mp3"`만 |
 
 ### 3-2. 검증 규칙 (서버가 422 `INVALID_EDIT`로 거절)
@@ -288,3 +288,4 @@ HTTP 에러 응답과 작업 `error` 필드는 **같은 모양**을 쓴다.
 | v1.1 | 2026-10-11 | 운영용 `GET /health` 표기 |
 | v1.2 | 2026-10-11 | Edit JSON `tracks` 최대 20개 |
 | v1.3 | 2026-10-11 | 실패한 노래 · 내보내기를 가리키는 요청은 404 `NOT_FOUND` (409는 "끝나면 될" 때만) |
+| v1.4 | 2026-10-11 | `normalize` 설명을 구현 방식(loudnorm) 대신 목표값으로 — 동작 · 필드는 그대로 |
