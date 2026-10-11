@@ -1,0 +1,38 @@
+// ③ 편집 홈 (2단계 범위) — docs/wireframes/html/Edit.html
+import { expect, test } from '@playwright/test'
+import { openEditHome, routeAudio, shot } from './fixtures'
+
+test('③ 노래 카드 · 전체 길이 · 숨긴 것(결정 17)', async ({ page }) => {
+  await openEditHome(page)
+  const card = page.getByRole('article', { name: '1번 노래' })
+  await expect(card.getByText('[노래 제목]')).toBeVisible()
+  await expect(card.getByText('3분 45초 · 보통 빠르기')).toBeVisible()
+  await expect(card.getByRole('button', { name: '잘라내기' })).toBeVisible()
+  await expect(page.getByText('전체 길이 3분 45초')).toBeVisible()
+  await expect(page.getByRole('status')).toHaveCount(0)
+  await expect(page.getByText('방금 바뀜')).toHaveCount(0)
+  await expect(page.getByRole('button', { name: '처음 상태로 되돌리기' })).toBeDisabled()
+
+  for (const hidden of ['빠르기', '위로', '아래로', '빼기', '불러와서 붙이기', '모든 노래 빠르기 바꾸기']) {
+    await expect(page.getByRole('button', { name: hidden, exact: true })).toHaveCount(0)
+    await expect(page.getByRole('link', { name: hidden, exact: true })).toHaveCount(0)
+  }
+  await expect(page.getByText('노래 하나 더 붙이기')).toHaveCount(0)
+  await expect(page.getByText('모든 노래에 한 번에 적용')).toHaveCount(0)
+  await shot(page, '03-edit-home-initial')
+})
+
+test('③ [들어보기] · [전체 들어보기]는 브라우저에서 재생하고 [멈추기]로 바뀜', async ({ page }) => {
+  await routeAudio(page)
+  await openEditHome(page)
+  const card = page.getByRole('article', { name: '1번 노래' })
+
+  await card.getByRole('button', { name: '들어보기' }).click()
+  await expect(card.getByRole('button', { name: '멈추기' })).toBeVisible()
+  await card.getByRole('button', { name: '멈추기' }).click()
+  await expect(card.getByRole('button', { name: '들어보기' })).toBeVisible()
+
+  await page.getByRole('button', { name: '전체 들어보기' }).click()
+  await expect(page.getByRole('button', { name: '멈추기' })).toBeVisible()
+  await expect(card.getByRole('button', { name: '들어보기' })).toBeVisible()
+})

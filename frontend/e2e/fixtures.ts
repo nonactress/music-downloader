@@ -56,3 +56,21 @@ export async function shot(page: Page, name: string) {
   await page.evaluate(() => document.fonts.ready)
   await page.screenshot({ path: `${SHOTS}/${name}.png`, fullPage: true })
 }
+
+/** 무음 WAV (8kHz 8bit 모노) — 미리듣기 재생 확인용 */
+export function silentWav(seconds: number): Buffer {
+  const rate = 8000
+  const n = rate * seconds
+  const b = Buffer.alloc(44 + n)
+  b.write('RIFF', 0); b.writeUInt32LE(36 + n, 4); b.write('WAVE', 8)
+  b.write('fmt ', 12); b.writeUInt32LE(16, 16); b.writeUInt16LE(1, 20); b.writeUInt16LE(1, 22)
+  b.writeUInt32LE(rate, 24); b.writeUInt32LE(rate, 28); b.writeUInt16LE(1, 32); b.writeUInt16LE(8, 34)
+  b.write('data', 36); b.writeUInt32LE(n, 40)
+  b.fill(128, 44)
+  return b
+}
+
+export async function routeAudio(page: Page, seconds = 225) {
+  const body = silentWav(seconds)
+  await page.route('**/api/tracks/*/audio', (r) => r.fulfill({ status: 200, contentType: 'audio/wav', body }))
+}
