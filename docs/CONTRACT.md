@@ -144,7 +144,7 @@
 
 - 응답 `200` (또는 `Range` 요청 시 `206`), `Content-Type: audio/mpeg`, `Accept-Ranges: bytes`
 - 내용: 추출 · 변환된 원곡 전체 (44.1kHz 스테레오 mp3). 편집 내용은 반영하지 않는다 — 미리듣기는 브라우저가 `start`/`end`/`playbackRate`로 처리.
-- 없거나 지워졌으면 404 `NOT_FOUND`, 아직 추출 중이면 409 `NOT_READY`.
+- 없거나 지워졌거나 **추출이 실패했으면** 404 `NOT_FOUND`, 아직 추출 중이면 409 `NOT_READY`.
 
 ### 2-4. `GET /tracks/{id}/peaks` — 파형 데이터
 
@@ -174,7 +174,7 @@
 | 상황 | HTTP | `code` |
 |---|---|---|
 | Edit JSON 규칙 위반 (3-2) | 422 | `INVALID_EDIT` |
-| `sourceId`가 없거나 지워짐 | 404 | `NOT_FOUND` |
+| `sourceId`가 없거나 지워졌거나 **추출이 실패함** | 404 | `NOT_FOUND` |
 | `sourceId` 추출이 아직 안 끝남 | 409 | `NOT_READY` |
 | 요청이 너무 많음 | 429 | `RATE_LIMITED` |
 
@@ -184,7 +184,7 @@
 - `Content-Disposition: attachment; filename="export.mp3"; filename*=UTF-8''%EB%82%B4%20%EB%85%B8%EB%9E%98_1011.mp3`
   (한글 파일 이름은 `filename*`, 영문 대체 이름은 `filename`)
 - 저장 완료 화면의 [들어보기]도 이 주소를 `<audio src>`로 쓴다.
-- 없거나 지워졌으면 404 `NOT_FOUND`, 렌더링이 안 끝났으면 409 `NOT_READY`.
+- 없거나 지워졌거나 **렌더링이 실패했으면** 404 `NOT_FOUND`, 렌더링이 안 끝났으면 409 `NOT_READY`.
 
 ---
 
@@ -287,3 +287,4 @@ HTTP 에러 응답과 작업 `error` 필드는 **같은 모양**을 쓴다.
 | v1 | 2026-10-11 | 처음 작성 |
 | v1.1 | 2026-10-11 | 운영용 `GET /health` 표기 |
 | v1.2 | 2026-10-11 | Edit JSON `tracks` 최대 20개 |
+| v1.3 | 2026-10-11 | 실패한 노래 · 내보내기를 가리키는 요청은 404 `NOT_FOUND` (409는 "끝나면 될" 때만) |
