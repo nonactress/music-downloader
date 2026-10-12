@@ -28,8 +28,9 @@ services:
       context: .
       dockerfile: backend/Dockerfile
     environment: *app-env
+    # 개발 확인용으로 이 컴퓨터 안에서만 열기 — 바깥에서 api에 바로 붙으면 X-Forwarded-For 위조가 가능 (B12)
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     volumes:
       - media:/data
     depends_on:
@@ -51,8 +52,9 @@ services:
 
   redis:
     image: redis:7-alpine
+    # 비밀번호 없는 Redis — 절대 바깥에 열지 않음
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
