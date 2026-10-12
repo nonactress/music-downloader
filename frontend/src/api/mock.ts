@@ -96,8 +96,8 @@ function silentWavUrl(): string {
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
-/** 목 계정 — 아이디 grandma, 비밀번호 1234 */
-const MOCK_ACCOUNTS: Record<string, string> = { grandma: '1234' }
+/** 목 계정 — 아이디 grandma, 비밀번호 123456 (실제 규칙처럼 6자 이상, 결정 61) */
+const MOCK_ACCOUNTS: Record<string, string> = { grandma: '123456' }
 /** 쿠키 대신 브라우저에 로그인 상태를 기억 (새로고침해도 로그인 유지) */
 const MOCK_SESSION_KEY = 'easy-music:mock-login'
 const LOCK_AFTER = 5
