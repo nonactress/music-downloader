@@ -1,5 +1,5 @@
 // F21 [가+ 글자 크게] — 화면 전체 1.25배, 버튼 글자 바뀜, 브라우저에 기억, 가로 스크롤 없음 (결정 46)
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import {
   appendSecond, exportDone, exportRunning, extractRunning, json, openEditHome, routeAudio, submitUrl,
 } from './fixtures'

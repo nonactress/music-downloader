@@ -7,9 +7,19 @@ export interface HelpText {
   note?: string
 }
 
-export type HelpKey = 'import' | 'progress' | 'edit' | 'trim' | 'speed' | 'done' | 'findSaved'
+export type HelpKey = 'login' | 'import' | 'progress' | 'edit' | 'trim' | 'speed' | 'done' | 'findSaved'
 
 export const HELP: Record<HelpKey, HelpText> = {
+  login: {
+    title: '로그인하는 방법',
+    steps: [
+      '관리자에게 받은 **아이디**와 **비밀번호**를 넣어요.',
+      '비밀번호가 잘 보이지 않으면 [비밀번호 보이기]를 눌러 확인하세요.',
+      '[로그인]을 누르세요. 이 컴퓨터에서는 한 달 동안 다시 로그인하지 않아도 돼요.',
+      '다 쓰고 나서 다른 사람과 함께 쓰는 컴퓨터라면 맨 위 [나가기]를 눌러 주세요.',
+    ],
+    note: '아이디나 비밀번호를 잊어버렸으면 관리자에게 물어보세요.',
+  },
   import: {
     title: '노래를 가져오는 방법',
     steps: [

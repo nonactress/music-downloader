@@ -1,5 +1,5 @@
 // F20 — 03-edit-home.png와 같은 장면: 2곡, 1번 앞뒤 잘라냄, 2번 빠르게 1.25배 + 알림
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 import { appendSecond, openEditHome, shot, track } from './fixtures'
 
 test('③ 와이어프레임 장면 (2곡 · 1번 잘라냄 · 2번 1.25배 · 알림)', async ({ page }) => {

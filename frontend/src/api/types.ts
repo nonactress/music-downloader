@@ -1,4 +1,4 @@
-// docs/CONTRACT.md v1 그대로. 필드 이름 · 상태값을 바꾸지 말 것.
+// docs/CONTRACT.md v1.6 그대로. 필드 이름 · 상태값을 바꾸지 말 것.
 
 export type JobStatus = 'queued' | 'running' | 'done' | 'failed'
 export type JobKind = 'extract' | 'export'
@@ -16,6 +16,9 @@ export type ErrorCode =
   | 'NOT_READY'
   | 'RATE_LIMITED'
   | 'INTERNAL'
+  | 'UNAUTHORIZED'
+  | 'LOGIN_FAILED'
+  | 'LOGIN_LOCKED'
 
 export interface ApiErrorBody {
   code: ErrorCode | string
@@ -92,4 +95,13 @@ export interface EditJson {
   crossfade: number
   normalize: boolean
   format: 'mp3'
+}
+
+/** CONTRACT 5-2 · 5-4 */
+export interface AuthUser {
+  loginId: string
+}
+
+export interface AuthResponse {
+  user: AuthUser
 }

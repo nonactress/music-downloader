@@ -1,5 +1,5 @@
 // ③ 편집 홈 (2단계 범위) — docs/wireframes/html/Edit.html
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 import { openEditHome, routeAudio, shot } from './fixtures'
 
 test('③ 노래 카드 · 전체 길이 · 4단계 전체 영역(결정 43)', async ({ page }) => {

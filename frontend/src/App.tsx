@@ -1,7 +1,9 @@
 import { useEffect } from 'react'
 import { HelpDialog } from './components/HelpDialog'
+import { useAuthStore } from './store/authStore'
 import { useFlowStore, type Screen } from './store/flowStore'
 import { ImportPage } from './pages/ImportPage'
+import { LoginPage } from './pages/LoginPage'
 import { LoadingPage } from './pages/LoadingPage'
 import { DonePage } from './pages/DonePage'
 import { EditPage } from './pages/EditPage'
@@ -23,15 +25,20 @@ const TITLES = {
 
 export function App() {
   const screen = useFlowStore((s) => s.screen)
+  const auth = useAuthStore((s) => s.status)
 
   useEffect(() => {
-    document.title = `${TITLES[screen]} — 쉬운 음악 만들기`
+    if (auth === 'checking') return
+    document.title = `${auth === 'out' ? '로그인' : TITLES[screen]} — 쉬운 음악 만들기`
     window.scrollTo(0, 0)
-  }, [screen])
+  }, [screen, auth])
+
+  // 로그인했는지 확인하는 동안은 빈 배경만 (로그인 화면이 깜빡이지 않게)
+  if (auth === 'checking') return <div className="page" />
 
   return (
     <>
-      <CurrentScreen screen={screen} />
+      {auth === 'out' ? <LoginPage /> : <CurrentScreen screen={screen} />}
       <HelpDialog />
     </>
   )

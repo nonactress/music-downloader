@@ -1,5 +1,5 @@
 // ⑥ 모든 노래 빠르기 — docs/wireframes/html/SpeedAll.html
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import { openEditHome, routeAudio, shot } from './fixtures'
 
 const card = (page: Page) => page.getByRole('article', { name: '1번 노래' })

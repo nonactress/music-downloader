@@ -1,5 +1,5 @@
 // F23 새로고침 · 창을 닫아도 이어서 (결정 48)
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import {
   appendSecond, exportDone, exportRunning, extractDone, extractRunning, json, openEditHome, routeAudio, submitUrl,
 } from './fixtures'
