@@ -29,11 +29,25 @@ test.beforeEach(async ({ page }) => {
   await login(page, USER1)
 })
 
+const RATE_LIMITED = '요청이 너무 많아요. 잠시 후 다시 시도해 주세요.'
+
+/** 서버의 IP당 분당 요청 수 제한(기본 10, PLAN 12장)에 걸리면 1분 기다렸다 다시 — LIVE 전체가 10곡을 넘게 불러온다 */
+async function submitVideo(page: Page) {
+  for (let attempt = 0; ; attempt++) {
+    await page.getByRole('button', { name: '노래 불러오기' }).click()
+    const progress = page.getByText(/% 완료/)
+    const limited = page.getByRole('alert').filter({ hasText: RATE_LIMITED })
+    await expect(progress.or(limited)).toBeVisible()
+    if (!(await limited.isVisible()) || attempt >= 1) break
+    await page.waitForTimeout(61_000)
+  }
+  await expect(page.getByText(/% 완료/)).toBeVisible()
+}
+
 async function importToEditHome(page: Page) {
   await page.goto('/')
   await page.getByLabel('유튜브 주소').fill(VIDEO)
-  await page.getByRole('button', { name: '노래 불러오기' }).click()
-  await expect(page.getByText(/% 완료/)).toBeVisible()
+  await submitVideo(page)
   await expect(page.getByRole('heading', { name: '노래를 다듬어 주세요' })).toBeVisible({ timeout: 120_000 })
 }
 
@@ -172,8 +186,7 @@ test('실제 백엔드 전체 흐름: ① → ② → ③ 붙이기 · 자르기
   // ① → ② : 불러오는 중에 새로고침해도 같은 작업을 이어서 ③까지
   await page.goto('/')
   await page.getByLabel('유튜브 주소').fill(VIDEO)
-  await page.getByRole('button', { name: '노래 불러오기' }).click()
-  await expect(page.getByText(/% 완료/)).toBeVisible()
+  await submitVideo(page)
   await page.reload()
   await expect(page.getByRole('heading', { name: '노래를 다듬어 주세요' })).toBeVisible({ timeout: 120_000 })
 

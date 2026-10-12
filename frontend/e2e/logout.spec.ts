@@ -1,7 +1,7 @@
 // F28 [나가기] · 쓰는 중 401 (결정 59 · 60)
 import { expect, test, type Page } from './fixtures'
 import {
-  UNAUTHORIZED, USER, appendSecond, extractRunning, json, openEditHome, routeAudio, submitUrl,
+  UNAUTHORIZED, USER, appendSecond, exportDone, extractRunning, json, openEditHome, routeAudio, silentWav, submitUrl,
 } from './fixtures'
 
 const SESSION_KEY = 'easy-music:session'
@@ -157,4 +157,68 @@ test('6단계 전에 저장한 값(v1, 누구 것인지 모름)은 버리고 ①
   await page.reload()
   await expect(importHeading(page)).toBeVisible()
   expect(await saved(page)).toBeNull()
+})
+
+/** ③ → 저장 → ⑦ (다운로드 파일은 무음 WAV) */
+async function openDone(page: Page) {
+  await page.route('**/api/exports', (r) => json(r, { jobId: 'j2', exportId: 'e1' }, 202))
+  await page.route('**/api/jobs/j2', (r) => json(r, exportDone(1, 225)))
+  await page.route('**/api/exports/e1/download', (r) =>
+    r.fulfill({ status: 200, contentType: 'audio/wav', headers: { 'Content-Disposition': 'attachment' }, body: silentWav(2) }))
+  await openEditHome(page)
+  await page.getByRole('button', { name: '다 됐어요, 저장하기' }).click()
+  await expect(page.getByRole('heading', { name: '노래가 완성됐어요!' })).toBeVisible()
+}
+
+/** 서버에서 세션이 지워진 것처럼: 이제부터 /auth/me와 파일 응답이 401 */
+async function endServerSession(page: Page, files: string) {
+  await page.route('**/api/auth/me', (r) => json(r, UNAUTHORIZED, 401))
+  await page.route(files, (r) => json(r, UNAUTHORIZED, 401))
+}
+
+test('⑦ 세션이 지워진 뒤 [들어보기] → <audio> error → GET /auth/me 401 → 로그인 화면, 같은 아이디면 ⑦ 그대로', async ({ page }) => {
+  await openDone(page)
+  await endServerSession(page, '**/api/exports/e1/download')
+  await page.getByRole('button', { name: '들어보기' }).click()
+  await expect(loginHeading(page)).toBeVisible()
+  await expect(page.getByRole('alert')).toHaveText('로그인이 필요해요. 다시 로그인해 주세요.')
+
+  await page.unroute('**/api/auth/me')
+  await loginAs(page, USER.loginId)
+  // ⑦은 결과를 저장하지 않으므로(결정 53) 메모리에 있던 ⑦ 그대로
+  await expect(page.getByRole('heading', { name: '노래가 완성됐어요!' })).toBeVisible()
+})
+
+test('③ 세션이 지워진 뒤 노래 [들어보기](미리듣기) → 로그인 화면', async ({ page }) => {
+  await openEditHome(page)
+  await endServerSession(page, '**/api/tracks/*/audio')
+  await page.getByRole('article', { name: '1번 노래' }).getByRole('button', { name: '들어보기' }).click()
+  await expect(loginHeading(page)).toBeVisible()
+  await expect(page.getByRole('alert')).toHaveText('로그인이 필요해요. 다시 로그인해 주세요.')
+})
+
+test('오디오가 401이 아닌 이유로 실패하면(/auth/me 200) 화면 그대로', async ({ page }) => {
+  let checked = false
+  await openEditHome(page)
+  await page.route('**/api/tracks/*/audio', (r) => r.fulfill({ status: 500, body: '' }))
+  await page.route('**/api/auth/me', (r) => { checked = true; return json(r, { user: USER }) })
+  await page.getByRole('article', { name: '1번 노래' }).getByRole('button', { name: '들어보기' }).click()
+  await expect.poll(() => checked).toBe(true)
+  await expect(editHeading(page)).toBeVisible()
+})
+
+test('⑦ [내 컴퓨터에 저장하기] — 누르기 직전 /auth/me: 200이면 내려받기, 401이면 내려받지 않고 로그인 화면', async ({ page }) => {
+  await openDone(page)
+  const save = page.getByRole('link', { name: '내 컴퓨터에 저장하기' })
+  const download = page.waitForEvent('download')
+  await save.click()
+  expect((await download).suggestedFilename()).toBe('내 노래_1011.mp3')
+
+  let downloaded = false
+  page.on('download', () => { downloaded = true })
+  await endServerSession(page, '**/api/exports/e1/download')
+  await save.click()
+  await expect(loginHeading(page)).toBeVisible()
+  await expect(page.getByRole('alert')).toHaveText('로그인이 필요해요. 다시 로그인해 주세요.')
+  expect(downloaded).toBe(false)
 })
