@@ -21,6 +21,8 @@ interface FlowStore {
   /** ③ 붙이기 칸에 넣었던 주소 — 실패해서 돌아오면 채워 둔다 */
   appendUrl: string
   exportResult: ExportResult | null
+  /** 처음 노래를 불러오기 시작한 시각(ms) — 서버 보관 24시간의 기준, 복원은 23시간 안만 (결정 48) */
+  startedAt: number | null
 
   startLoading: (extractJobId: string, url: string) => void
   startAppending: (extractJobId: string, url: string) => void
@@ -43,9 +45,13 @@ export const useFlowStore = create<FlowStore>((set) => ({
   lastUrl: '',
   appendUrl: '',
   exportResult: null,
+  startedAt: null,
 
   startLoading: (extractJobId, url) =>
-    set({ screen: 'loading', extractMode: 'import', extractJobId, lastUrl: url, appendUrl: '', exportResult: null }),
+    set({
+      screen: 'loading', extractMode: 'import', extractJobId, lastUrl: url, appendUrl: '', exportResult: null,
+      startedAt: Date.now(),
+    }),
   startAppending: (extractJobId, url) =>
     set({ screen: 'loading', extractMode: 'append', extractJobId, appendUrl: url }),
   startSaving: (exportJobId) => set({ screen: 'saving', exportJobId, exportResult: null }),
