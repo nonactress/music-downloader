@@ -1,6 +1,7 @@
 // 접속 제한 로그인 (결정 54~60) — 로그인했는지 · 누구인지
 import { create } from 'zustand'
 import { api, setUnauthorizedHandler } from '../api/client'
+import { ApiError } from '../api/errors'
 import { beginUser, endUser } from './persist'
 
 /** checking: 앱을 열고 GET /auth/me 답을 기다리는 중 */
@@ -51,6 +52,22 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 }))
 
 setUnauthorizedHandler(() => useAuthStore.getState().expire())
+
+/** <audio> · 다운로드 링크는 401을 화면이 알 수 없어서, 막혔을 때 · 누르기 직전에 GET /auth/me로 확인한다.
+ *  세션이 끝났으면 expire()(결정 60)하고 false. 서버에 닿지 않는 등 다른 이유면 true (그대로 진행) */
+export async function checkSession(): Promise<boolean> {
+  if (useAuthStore.getState().status !== 'in') return false
+  try {
+    await api.me()
+    return true
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 401) {
+      useAuthStore.getState().expire()
+      return false
+    }
+    return true
+  }
+}
 
 /** 앱을 열 때 한 번: 로그인 화면을 보일지, 원래 화면을 보일지 (CONTRACT 5-4) */
 export async function initAuth() {

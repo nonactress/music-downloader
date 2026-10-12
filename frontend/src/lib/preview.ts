@@ -1,6 +1,7 @@
 // 브라우저 미리듣기 — <audio> 하나로 구간(start~end)을 playbackRate + preservesPitch로 재생.
 // 서버 렌더링 없음 (CLAUDE.md). 여러 구간이면 순서대로 이어서 재생한다.
 import { create } from 'zustand'
+import { checkSession } from '../store/authStore'
 
 export interface Segment {
   src: string
@@ -55,7 +56,11 @@ function getAudio(): HTMLAudioElement {
     audio.addEventListener('ended', () => next())
     // 다른 탭에 가면 requestAnimationFrame이 멈추므로 timeupdate로도 끝을 확인한다 (먼저 오는 쪽)
     audio.addEventListener('timeupdate', () => checkEnd())
-    audio.addEventListener('error', () => usePreview.getState().stop())
+    audio.addEventListener('error', () => {
+      usePreview.getState().stop()
+      // 세션이 끝나 오디오가 401로 막혔을 수 있다 → 로그인 화면 (결정 60)
+      void checkSession()
+    })
   }
   return audio
 }

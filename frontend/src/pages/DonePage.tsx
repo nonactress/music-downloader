@@ -1,9 +1,10 @@
 // ⑦ 저장 완료 — docs/wireframes/html/Done.html
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type MouseEvent } from 'react'
 import { api } from '../api/client'
 import { CheckIcon, DownloadIcon, MusicIcon, PauseIcon, PlayIcon } from '../components/Icons'
 import { Page } from '../components/Page'
 import { formatFileSize, formatKoreanDuration } from '../lib/format'
+import { checkSession } from '../store/authStore'
 import { useEditStore } from '../store/editStore'
 import { useFlowStore } from '../store/flowStore'
 import { clearSession } from '../store/persist'
@@ -15,6 +16,9 @@ export function DonePage() {
   const goEdit = useFlowStore((s) => s.goEdit)
   const audioRef = useRef<HTMLAudioElement>(null)
   const [playing, setPlaying] = useState(false)
+  const saveRef = useRef<HTMLAnchorElement>(null)
+  /** 확인을 마치고 다시 누른 클릭은 그대로 내려받기 */
+  const checked = useRef(false)
 
   useEffect(() => {
     if (!result) goImport()
@@ -28,6 +32,18 @@ export function DonePage() {
     if (!audio) return
     if (audio.paused) void audio.play()
     else audio.pause()
+  }
+
+  // 다운로드 링크가 401이면 화면이 알 수 없으니 누르기 직전에 로그인 확인 (결정 60)
+  async function save(e: MouseEvent<HTMLAnchorElement>) {
+    if (checked.current) {
+      checked.current = false
+      return
+    }
+    e.preventDefault()
+    if (!(await checkSession())) return
+    checked.current = true
+    saveRef.current?.click()
   }
 
   function startNew() {
@@ -70,10 +86,15 @@ export function DonePage() {
             onPlay={() => setPlaying(true)}
             onPause={() => setPlaying(false)}
             onEnded={() => setPlaying(false)}
+            // 세션이 끝나 401로 막혔을 수 있다 → 로그인 화면 (결정 60)
+            onError={() => {
+              setPlaying(false)
+              void checkSession()
+            }}
           />
         </div>
 
-        <a className="btn-primary done__save" href={downloadUrl} download={result.fileName}>
+        <a ref={saveRef} className="btn-primary done__save" href={downloadUrl} download={result.fileName} onClick={save}>
           <DownloadIcon />
           내 컴퓨터에 저장하기
         </a>
