@@ -1,0 +1,5 @@
+# 윈도우 프로그램 빌드용 (CI windows-latest, 결정 75). 서버 모드와 같은 백엔드 + 창 + 묶기 도구
+-r ../backend/requirements.txt
+-r ../worker/requirements.txt
+pywebview==6.2.1
+pyinstaller==6.22.3

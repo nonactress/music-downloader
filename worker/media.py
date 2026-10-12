@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import math
+import os
 import re
 import subprocess
 from pathlib import Path
@@ -18,6 +19,13 @@ class MediaError(Exception):
     pass
 
 
+def popen_flags() -> dict:
+    """윈도우에서 ffmpeg · yt-dlp 콘솔 창이 깜빡이지 않게 (결정 73). 다른 OS는 없음."""
+    if os.name == "nt":
+        return {"creationflags": subprocess.CREATE_NO_WINDOW}
+    return {}
+
+
 def _run(args: list[str], *, capture_stdout: bool = False) -> subprocess.CompletedProcess:
     try:
         return subprocess.run(
@@ -26,6 +34,7 @@ def _run(args: list[str], *, capture_stdout: bool = False) -> subprocess.Complet
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE if capture_stdout else subprocess.DEVNULL,
             stderr=subprocess.PIPE,
+            **popen_flags(),
         )
     except subprocess.CalledProcessError as e:
         tail = (e.stderr or b"")[-500:].decode("utf-8", "replace")
@@ -35,7 +44,7 @@ def _run(args: list[str], *, capture_stdout: bool = False) -> subprocess.Complet
 def convert_to_mp3(src: Path, dst: Path, bitrate: str = "192k") -> None:
     """원본 오디오 → 44.1kHz 스테레오 mp3 (PLAN 10장: 모든 소스 통일)."""
     _run([
-        "ffmpeg", "-hide_banner", "-nostdin", "-y",
+        config.FFMPEG_BIN, "-hide_banner", "-nostdin", "-y",
         "-i", str(src),
         "-vn", "-map_metadata", "-1",
         "-ar", str(config.SAMPLE_RATE), "-ac", "2",
@@ -46,7 +55,7 @@ def convert_to_mp3(src: Path, dst: Path, bitrate: str = "192k") -> None:
 
 def probe_duration(path: Path) -> float:
     out = _run([
-        "ffprobe", "-v", "error",
+        config.FFPROBE_BIN, "-v", "error",
         "-show_entries", "format=duration",
         "-of", "default=noprint_wrappers=1:nokey=1",
         str(path),
@@ -77,7 +86,7 @@ def peaks_from_samples(samples: np.ndarray, rate: int, duration: float,
 def compute_peaks(path: Path, duration: float,
                   points_per_second: int = config.PEAKS_PER_SECOND) -> list[float]:
     raw = _run([
-        "ffmpeg", "-hide_banner", "-nostdin", "-v", "error",
+        config.FFMPEG_BIN, "-hide_banner", "-nostdin", "-v", "error",
         "-i", str(path),
         "-ac", "1", "-ar", str(PEAKS_DECODE_RATE),
         "-f", "s16le", "-",
@@ -106,7 +115,7 @@ SILENCE_LUFS = -70.0
 def measure_loudness(path: Path, start: float, end: float) -> tuple[float, float]:
     """남길 구간의 소리 크기(통합 LUFS)와 최대값(true peak dBFS). ebur128 — 길이에 비례해 빠름."""
     err = _run([
-        "ffmpeg", "-hide_banner", "-nostdin", "-nostats", "-v", "info",
+        config.FFMPEG_BIN, "-hide_banner", "-nostdin", "-nostats", "-v", "info",
         "-ss", f"{start:.3f}", "-to", f"{end:.3f}", "-i", str(path),
         "-af", "ebur128=peak=true:framelog=quiet",
         "-f", "null", "-",

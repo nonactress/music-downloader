@@ -10,12 +10,11 @@ import time
 from pathlib import Path
 
 import yt_dlp
-from celery.exceptions import SoftTimeLimitExceeded
 
-from app import config, queue, store
+from app import config, store
 from app.error_codes import error_body
-from worker import media
-from worker.celery_app import celery_app
+from worker import media, ytdlp_cli
+from worker.compat import SoftTimeLimitExceeded
 
 log = logging.getLogger(__name__)
 
@@ -114,6 +113,54 @@ def _from_download_error(e: yt_dlp.utils.DownloadError) -> Exception:
     return ExtractError(_classify_download_error(e), str(e))
 
 
+def _accept_info(job_id: str, track_id: str, info: dict | None, hook: "_ProgressHook"):
+    """영상 정보 검사 + track 먼저 채우기 (CONTRACT 2-2). 두 받기 방식이 같이 쓴다."""
+    if info is None or info.get("_type") == "playlist":
+        raise ExtractError("PLAYLIST_NOT_ALLOWED", "playlist")  # normalize_url이 막으므로 오지 않음
+    if info.get("is_live") or info.get("live_status") in ("is_live", "is_upcoming"):
+        raise ExtractError("VIDEO_UNAVAILABLE", "live")
+    duration = info.get("duration")
+    if duration is not None and duration > config.MAX_DURATION_SEC:
+        raise ExtractError("TOO_LONG", f"duration={duration}")
+    meta = _track_info(track_id, info, duration)
+    store.update_track(track_id, **{k: v for k, v in meta.items() if k != "trackId"})
+    hook.post_eta = _post_eta(duration)
+    store.update_job(job_id, progress=5, track=meta)
+    return meta, duration
+
+
+def _fetch_with_library(job_id, track_id, url, work_dir, hook):
+    """서버 모드: 파이썬 yt_dlp 라이브러리."""
+    with yt_dlp.YoutubeDL(_ydl_opts(work_dir, hook)) as ydl:
+        try:
+            info = ydl.extract_info(url, download=False)
+        except yt_dlp.utils.DownloadError as e:
+            raise _from_download_error(e) from e
+        meta, duration = _accept_info(job_id, track_id, info, hook)
+        try:
+            ydl.process_ie_result(info, download=True)
+        except yt_dlp.utils.DownloadError as e:
+            raise _from_download_error(e) from e
+    return meta, duration
+
+
+def _fetch_with_cli(job_id, track_id, url, work_dir, hook):
+    """데스크톱: yt-dlp 실행 파일 (결정 73). 진행률 · 에러 분류 · 너무 큰 파일 검사는 라이브러리와 같다."""
+    try:
+        info = ytdlp_cli.fetch_info(url, timeout=config.EXTRACT_TIMEOUT_SEC)
+        meta, duration = _accept_info(job_id, track_id, info, hook)
+        ytdlp_cli.download(info, work_dir, hook, timeout=config.EXTRACT_TIMEOUT_SEC,
+                           max_bytes=MAX_DOWNLOAD_BYTES)
+    except ytdlp_cli.CliTimeout as e:
+        raise ExtractError("TIMEOUT", str(e)) from e
+    except ytdlp_cli.CliError as e:
+        msg = str(e)
+        if "max-filesize" in msg.lower():
+            raise ExtractError("TOO_LONG", msg) from e
+        raise ExtractError(_classify_download_error(e), msg) from e
+    return meta, duration
+
+
 def run_extract(job_id: str, track_id: str) -> None:
     track = store.get_track(track_id)
     if track is None or store.get_job(job_id) is None:
@@ -128,31 +175,12 @@ def run_extract(job_id: str, track_id: str) -> None:
         store.update_job(job_id, status="running", progress=0, etaSeconds=None)
         store.update_track(track_id, status="running")
 
-        # 1) 영상 정보
+        # 1) 영상 정보 → 2) 오디오만 다운로드
         hook = _ProgressHook(job_id, None)
-        with yt_dlp.YoutubeDL(_ydl_opts(work_dir, hook)) as ydl:
-            try:
-                info = ydl.extract_info(track["url"], download=False)
-            except yt_dlp.utils.DownloadError as e:
-                raise _from_download_error(e) from e
-            if info is None or info.get("_type") == "playlist":
-                raise ExtractError("PLAYLIST_NOT_ALLOWED", "playlist")  # normalize_url이 막으므로 오지 않음
-            if info.get("is_live") or info.get("live_status") in ("is_live", "is_upcoming"):
-                raise ExtractError("VIDEO_UNAVAILABLE", "live")
-            duration = info.get("duration")
-            if duration is not None and duration > config.MAX_DURATION_SEC:
-                raise ExtractError("TOO_LONG", f"duration={duration}")
-
-            meta = _track_info(track_id, info, duration)
-            store.update_track(track_id, **{k: v for k, v in meta.items() if k != "trackId"})
-            hook.post_eta = _post_eta(duration)
-            store.update_job(job_id, progress=5, track=meta)
-
-            # 2) 오디오만 다운로드
-            try:
-                info = ydl.process_ie_result(info, download=True)
-            except yt_dlp.utils.DownloadError as e:
-                raise _from_download_error(e) from e
+        if ytdlp_cli.enabled():
+            meta, duration = _fetch_with_cli(job_id, track_id, track["url"], work_dir, hook)
+        else:
+            meta, duration = _fetch_with_library(job_id, track_id, track["url"], work_dir, hook)
 
         sources = [p for p in work_dir.iterdir() if p.name.startswith("source.") and not p.name.endswith(".part")]
         if not sources:
@@ -192,12 +220,3 @@ def _fail(job_id: str, track_id: str, code: str, detail: str) -> None:
     store.fail_job(job_id, error_body(code))
     for p in (config.track_audio_path(track_id), config.track_peaks_path(track_id)):
         p.unlink(missing_ok=True)
-
-
-@celery_app.task(
-    name=queue.EXTRACT_TASK,
-    soft_time_limit=config.EXTRACT_TIMEOUT_SEC,
-    time_limit=config.EXTRACT_TIMEOUT_SEC + 30,
-)
-def extract_track(job_id: str, track_id: str) -> None:
-    run_extract(job_id, track_id)

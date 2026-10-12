@@ -29,8 +29,18 @@ def clear_session_cookie(response: Response) -> None:
     )
 
 
+DESKTOP_USER = "me"
+
+
 def current_user(request: Request) -> str:
-    """로그인한 사람의 아이디. 아니면 401 UNAUTHORIZED (결정 57)."""
+    """로그인한 사람의 아이디. 아니면 401 UNAUTHORIZED (결정 57).
+    데스크톱: /desktop/start에서 받은 이번 실행의 세션 쿠키가 있으면 "me" (CONTRACT 7-1)."""
+    if config.DESKTOP:
+        from .desktop import has_desktop_session
+        if not has_desktop_session(request):
+            raise ApiError("UNAUTHORIZED")
+        request.state.login_id = DESKTOP_USER
+        return DESKTOP_USER
     found = sessions.lookup(request.cookies.get(sessions.COOKIE_NAME))
     if found is None:
         raise ApiError("UNAUTHORIZED")
@@ -70,4 +80,10 @@ def logout(request: Request) -> Response:
 
 @router.get("/auth/me")
 def me(login_id: str = Depends(current_user)) -> dict:
-    return {"user": {"loginId": login_id}}
+    """CONTRACT 5-4 · 7-2: desktop 필드로 프론트가 로그인 화면을 보일지 정한다."""
+    return {"user": {"loginId": login_id}, "desktop": config.DESKTOP}
+
+
+# 데스크톱에서는 /auth/me만 쓴다 (/auth/login · /auth/logout은 404, CONTRACT 7-1)
+desktop_router = APIRouter()
+desktop_router.add_api_route("/auth/me", me, methods=["GET"])

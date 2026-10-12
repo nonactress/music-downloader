@@ -8,8 +8,7 @@ import logging
 import shutil
 import time
 
-from app import config, queue
-from worker.celery_app import celery_app
+from app import config
 
 log = logging.getLogger(__name__)
 
@@ -35,8 +34,3 @@ def run_cleanup(now: float | None = None) -> int:
     if removed:
         log.info("cleanup: %d개 삭제", removed)
     return removed
-
-
-@celery_app.task(name=queue.CLEANUP_TASK, soft_time_limit=300, time_limit=330)
-def cleanup_files() -> int:
-    return run_cleanup()

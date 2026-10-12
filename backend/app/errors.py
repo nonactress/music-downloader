@@ -35,7 +35,8 @@ def install(app: FastAPI) -> None:
     @app.exception_handler(RequestValidationError)
     async def _validation(request: Request, exc: RequestValidationError):
         # FastAPI 기본 422를 CONTRACT 형식으로 바꾼다
-        code = {"/tracks": "INVALID_URL", "/auth/login": "LOGIN_FAILED"}.get(request.url.path, "INVALID_EDIT")
+        path = request.url.path.removeprefix("/api")  # 데스크톱 모드는 /api 아래 (CONTRACT 7-1)
+        code = {"/tracks": "INVALID_URL", "/auth/login": "LOGIN_FAILED"}.get(path, "INVALID_EDIT")
         return _response(code, _validation_detail(exc))
 
     @app.exception_handler(StarletteHTTPException)

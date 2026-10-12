@@ -33,7 +33,7 @@ def test_login_me_logout(user, fake_redis):
     assert "httponly" in low and "samesite=lax" in low and "path=/" in low
     assert "max-age=2592000" in low and "secure" not in low   # COOKIE_SECURE 기본 false
 
-    assert c.get("/auth/me").json() == {"user": {"loginId": "grandma"}}
+    assert c.get("/auth/me").json() == {"user": {"loginId": "grandma"}, "desktop": False}  # CONTRACT 7-2
     # Redis에는 토큰 원문이 아니라 해시만
     token = c.cookies.get("em_session")
     assert not any(token in k for k in fake_redis.scan_iter("*"))

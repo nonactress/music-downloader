@@ -11,9 +11,35 @@ def env_flag(name: str, default: bool = False) -> bool:
     return value.strip().lower() in ("1", "true", "yes")
 
 
+def _default_app_home() -> Path:
+    """데스크톱 데이터 폴더 (결정 67): 윈도우 %LOCALAPPDATA%\\EasyMusic, 개발용 Mac은 Application Support."""
+    if os.name == "nt":
+        return Path(os.environ.get("LOCALAPPDATA") or Path.home() / "AppData" / "Local") / "EasyMusic"
+    return Path.home() / "Library" / "Application Support" / "EasyMusic"
+
+
+# 데스크톱 모드 (결정 66, CONTRACT 7장): Celery · Redis 없이 한 프로세스 안에서
+DESKTOP = env_flag("DESKTOP")
+APP_HOME = Path(os.environ.get("EASYMUSIC_HOME") or _default_app_home())
+DESKTOP_PORT = int(os.environ.get("DESKTOP_PORT", "47821"))
+DESKTOP_KEY = os.environ.get("DESKTOP_KEY", "")  # 실행기가 실행할 때마다 무작위로 넣는다 (결정 69)
+# 화면 파일(vite build 결과). 데스크톱에서 FastAPI가 `/`로 제공
+FRONTEND_DIST = Path(os.environ.get("FRONTEND_DIST") or Path(__file__).resolve().parents[2] / "frontend" / "dist")
+# 저장 위치 (결정 71). 비워 두면 윈도우 "다운로드" 알려진 폴더 / 그 밖은 ~/Downloads
+DOWNLOADS_DIR = os.environ.get("EASYMUSIC_DOWNLOADS", "")
+# 도구 경로 (결정 73). 비워 두면: yt-dlp는 파이썬 라이브러리(서버 모드), ffmpeg · ffprobe는 PATH
+YTDLP_BIN = os.environ.get("EASYMUSIC_YTDLP", "")      # 설정하면 yt-dlp 실행 파일을 subprocess로
+DENO_BIN = os.environ.get("EASYMUSIC_DENO", "")        # yt-dlp --js-runtimes deno:<경로>
+FFMPEG_BIN = os.environ.get("EASYMUSIC_FFMPEG", "ffmpeg")
+FFPROBE_BIN = os.environ.get("EASYMUSIC_FFPROBE", "ffprobe")
+YTDLP_AUTO_UPDATE = env_flag("EASYMUSIC_YTDLP_UPDATE")  # 켤 때 뒤에서 yt-dlp -U (실행기가 켬)
+DESKTOP_EXTRACT_WORKERS = 2
+DESKTOP_EXPORT_WORKERS = 1
+
 REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
-# 기본값은 실행 위치와 상관없이 backend/data (API · worker가 같은 곳을 보게). Docker는 /data
-DATA_DIR = Path(os.environ.get("DATA_DIR") or Path(__file__).resolve().parents[1] / "data")
+# 기본값은 실행 위치와 상관없이 backend/data (API · worker가 같은 곳을 보게). Docker는 /data,
+# 데스크톱은 APP_HOME/data
+DATA_DIR = Path(os.environ.get("DATA_DIR") or (APP_HOME / "data" if DESKTOP else Path(__file__).resolve().parents[1] / "data"))
 # 로그인 계정 (결정 55). 24시간 정리 대상 아님. Docker: /accounts/users.json
 ACCOUNTS_FILE = Path(os.environ.get("ACCOUNTS_FILE") or Path(__file__).resolve().parents[1] / "accounts" / "users.json")
 # API 자동 문서(/docs · /redoc · /openapi.json). 기본 끔, 개발할 때만 true (결정 62)
@@ -44,6 +70,7 @@ EXPORT_TIMEOUT_SEC = int(os.environ.get("EXPORT_TIMEOUT_SEC", "900"))
 
 TRACKS_DIR = DATA_DIR / "tracks"
 EXPORTS_DIR = DATA_DIR / "exports"
+META_DIR = DATA_DIR / "meta"  # 데스크톱: 작업 · 노래 · 내보내기 기록 파일 (Redis 대신)
 
 # 파형 데이터 (CONTRACT 2-4)
 PEAKS_PER_SECOND = 20
