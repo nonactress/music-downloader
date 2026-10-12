@@ -1,5 +1,5 @@
 // 노래 하나 더 붙이기 (결정 36 · 37) — docs/wireframes/html/Edit.html, Loading.html
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import { extractRunning, json, openEditHome } from './fixtures'
 
 const track2 = { trackId: 't2', title: '[두 번째 노래 제목]', channel: '[채널]', durationSec: 240, thumbnailUrl: '' }

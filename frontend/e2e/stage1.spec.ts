@@ -1,5 +1,5 @@
 // 화면 ① ② ⑦ + 저장 대기 — 흐름 · 에러 확인과 1440px 스크린샷
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 import {
   URL_OK, exportDone, exportRunning, extractRunning, json, openEditHome, shot, submitUrl,
 } from './fixtures'

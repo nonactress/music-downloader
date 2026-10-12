@@ -96,7 +96,58 @@ function silentWavUrl(): string {
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
+/** 목 계정 — 아이디 grandma, 비밀번호 1234 */
+const MOCK_ACCOUNTS: Record<string, string> = { grandma: '1234' }
+/** 쿠키 대신 브라우저에 로그인 상태를 기억 (새로고침해도 로그인 유지) */
+const MOCK_SESSION_KEY = 'easy-music:mock-login'
+const LOCK_AFTER = 5
+const failures = new Map<string, number>()
+
+function mockSession(): string | null {
+  try {
+    return localStorage.getItem(MOCK_SESSION_KEY)
+  } catch {
+    return null
+  }
+}
+
+function setMockSession(loginId: string | null) {
+  try {
+    if (loginId) localStorage.setItem(MOCK_SESSION_KEY, loginId)
+    else localStorage.removeItem(MOCK_SESSION_KEY)
+  } catch {
+    // 무시
+  }
+}
+
 export const mockApi: Api = {
+  async login(rawId, password) {
+    await wait(300)
+    const loginId = rawId.trim().toLowerCase()
+    if ((failures.get(loginId) ?? 0) >= LOCK_AFTER) {
+      throw new ApiError({ code: 'LOGIN_LOCKED', message: '여러 번 틀려서 잠시 막혔어요. 15분 뒤에 다시 해 주세요.' }, 429)
+    }
+    if (MOCK_ACCOUNTS[loginId] !== password) {
+      failures.set(loginId, (failures.get(loginId) ?? 0) + 1)
+      throw new ApiError({ code: 'LOGIN_FAILED', message: '아이디나 비밀번호가 맞지 않아요. 다시 확인해 주세요.' }, 401)
+    }
+    failures.delete(loginId)
+    setMockSession(loginId)
+    return { user: { loginId } }
+  },
+
+  async logout() {
+    await wait(100)
+    setMockSession(null)
+  },
+
+  async me() {
+    await wait(100)
+    const loginId = mockSession()
+    if (!loginId) throw new ApiError({ code: 'UNAUTHORIZED', message: '로그인이 필요해요. 다시 로그인해 주세요.' }, 401)
+    return { user: { loginId } }
+  },
+
   async createTrack(url) {
     await wait(300)
     const err = checkYoutubeUrl(url)

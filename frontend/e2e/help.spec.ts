@@ -1,5 +1,5 @@
 // F22 [도움말] 창 · "저장한 노래는 어디서 찾나요?" · ① 그림 3장 (결정 47, 문구 docs/HELP.md)
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import { exportDone, json, openEditHome, routeAudio, shot } from './fixtures'
 
 const dialog = (page: Page) => page.getByRole('dialog')

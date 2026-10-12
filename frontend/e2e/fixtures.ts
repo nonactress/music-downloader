@@ -1,6 +1,8 @@
 // /api를 CONTRACT 형식 응답으로 가로채는 도우미
 import { mkdirSync, openSync, closeSync } from 'node:fs'
-import type { Page, Route } from '@playwright/test'
+import { test as base, type Page, type Route } from '@playwright/test'
+
+export { expect, type Page } from '@playwright/test'
 
 export const SHOTS = 'e2e/screenshots'
 /** 이번 실행에서 찍은 이름 — 워커가 여러 개라 파일로 남긴다 (globalSetup이 비움) */
@@ -32,6 +34,22 @@ export const exportDone = (trackCount = 2, durationSec = 380) => ({
   jobId: 'j2', kind: 'export', status: 'done', progress: 100, etaSeconds: 0, track: null,
   result: { exportId: 'e1', fileName: '내 노래_1011.mp3', trackCount, durationSec, sizeBytes: 6082560 },
   error: null,
+})
+
+export const USER = { loginId: 'grandma' }
+export const UNAUTHORIZED = { error: { code: 'UNAUTHORIZED', message: '로그인이 필요해요. 다시 로그인해 주세요.' } }
+
+/** 모든 테스트는 로그인된 상태로 시작 (CONTRACT 5-4) — 새 탭에도 적용되게 context에.
+ *  로그인 화면 테스트는 page.route로 /auth/me를 401로 다시 가로챈다 (page 쪽이 먼저) */
+export const test = base.extend<{ signedIn: void }>({
+  signedIn: [
+    async ({ context }, use) => {
+      await context.route('**/api/auth/me', (r) => json(r, { user: USER }))
+      await context.route('**/api/auth/logout', (r) => r.fulfill({ status: 204 }))
+      await use()
+    },
+    { auto: true },
+  ],
 })
 
 export async function submitUrl(page: Page) {

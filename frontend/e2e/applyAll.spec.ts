@@ -1,5 +1,5 @@
 // "모든 노래에 한 번에 적용" — 부드럽게 잇기 · 소리 크기 (결정 39 · 40 · 42)
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import { appendSecond, json, openEditHome } from './fixtures'
 
 const crossfade = (page: Page) => page.getByRole('checkbox', { name: /노래 사이 부드럽게 잇기/ })

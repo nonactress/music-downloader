@@ -1,5 +1,5 @@
 // F25 글자 크게 모드 1440px 스크린샷 — 7개 화면 + 저장 대기 (결정 46)
-import { expect, test } from '@playwright/test'
+import { expect, test } from './fixtures'
 import {
   appendSecond, exportDone, exportRunning, extractRunning, json, openEditHome, routeAudio, shot, submitUrl, track,
 } from './fixtures'

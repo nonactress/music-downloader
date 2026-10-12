@@ -1,5 +1,5 @@
 // 카드 [위로] [아래로] [빼기] (결정 38) — docs/wireframes/html/Edit.html
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import { appendSecond, openEditHome } from './fixtures'
 
 const card = (page: Page, n: number) => page.getByRole('article', { name: `${n}번 노래` })

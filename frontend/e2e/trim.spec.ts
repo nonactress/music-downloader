@@ -1,5 +1,5 @@
 // ④ 한 곡 잘라내기 + ③ 변경 알림 · 되돌리기 — docs/wireframes/html/Trim.html, Edit.html
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Page } from './fixtures'
 import { json, openEditHome, routeAudio, shot } from './fixtures'
 
 const card = (page: Page) => page.getByRole('article', { name: '1번 노래' })
