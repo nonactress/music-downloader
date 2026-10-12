@@ -104,3 +104,38 @@ def test_build_command_is_arg_list():
 def test_build_command_mismatch():
     with pytest.raises(ValueError):
         build_command(["a"], [TrackEdit(0, 1), TrackEdit(0, 1)], 0, False, "o.mp3")
+
+
+def test_normalize_with_measured_gains_uses_volume():
+    f = build_filter([TrackEdit(0, 10), TrackEdit(0, 10, 1.25)], 0, True, gains_db=[3.456, -2])
+    assert "[0:a]atrim=start=0:end=10,asetpts=PTS-STARTPTS,volume=3.46dB[a0]" in f
+    assert "atempo=1.25,volume=-2.00dB[a1]" in f
+    assert "loudnorm" not in f
+
+
+def test_gains_ignored_without_normalize():
+    f = build_filter([TrackEdit(0, 10)], 0, False, gains_db=[5])
+    assert "volume" not in f and "loudnorm" not in f
+
+
+def test_gains_length_mismatch():
+    with pytest.raises(ValueError):
+        build_filter([TrackEdit(0, 10), TrackEdit(0, 10)], 0, True, gains_db=[1])
+
+
+@pytest.mark.parametrize("lufs,peak,gain", [
+    (-20, -10, 4),      # 4dB 키우면 -16 LUFS, 최대값 -6 → 여유 있음
+    (-10, -0.5, -6),    # 시끄러운 곡은 줄임
+    (-20, -3, 1.5),     # 최대값이 -1.5를 넘지 않을 만큼만 키움
+    (-70, -60, 20),     # 거의 무음 → 상한 20dB
+    (5, 3, -20),        # 하한 -20dB
+])
+def test_normalize_gain_db(lufs, peak, gain):
+    from app.ffmpeg_builder import normalize_gain_db
+    assert normalize_gain_db(lufs, peak) == pytest.approx(gain)
+
+
+def test_build_command_passes_gains():
+    cmd = build_command(["a", "b"], [TrackEdit(0, 10), TrackEdit(0, 10)], 2, True, "o.mp3", gains_db=[1, 2])
+    fc = cmd[cmd.index("-filter_complex") + 1]
+    assert "volume=1.00dB" in fc and "volume=2.00dB" in fc
