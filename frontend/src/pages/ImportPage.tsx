@@ -3,6 +3,7 @@ import { useState, type FormEvent } from 'react'
 import { api } from '../api/client'
 import { toUserMessage } from '../api/errors'
 import { ErrorBox } from '../components/ErrorBox'
+import { HOWTO_PICTURES } from '../components/HowtoPictures'
 import { PasteIcon } from '../components/Icons'
 import { Page } from '../components/Page'
 import { checkYoutubeUrl } from '../lib/youtubeUrl'
@@ -99,8 +100,7 @@ export function ImportPage() {
           <ol className="howto__grid">
             {HOWTO.map((text, i) => (
               <li key={text} className="howto__item">
-                {/* 그림은 5단계 전까지 와이어프레임 자리표시 (PLAN 결정 13) */}
-                <div className="howto__pic">[화면 그림 {i + 1}]</div>
+                <div className="howto__pic">{HOWTO_PICTURES[i]()}</div>
                 <div className="howto__text"><b>{i + 1}.</b> {text}</div>
               </li>
             ))}

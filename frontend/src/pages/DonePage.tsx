@@ -6,6 +6,7 @@ import { Page } from '../components/Page'
 import { formatFileSize, formatKoreanDuration } from '../lib/format'
 import { useEditStore } from '../store/editStore'
 import { useFlowStore } from '../store/flowStore'
+import { useUiStore } from '../store/uiStore'
 
 export function DonePage() {
   const result = useFlowStore((s) => s.exportResult)
@@ -74,8 +75,16 @@ export function DonePage() {
           내 컴퓨터에 저장하기
         </a>
 
-        {/* 안내 내용은 5단계 전까지 자리표시 (PLAN 결정 13) */}
-        <a href="#" className="done__help" onClick={(e) => e.preventDefault()}>
+        {/* 도움말과 같은 창 (결정 47). 와이어프레임의 링크 모양 그대로 */}
+        <a
+          href="#"
+          className="done__help"
+          aria-haspopup="dialog"
+          onClick={(e) => {
+            e.preventDefault()
+            useUiStore.getState().openHelp('findSaved')
+          }}
+        >
           저장한 노래는 어디서 찾나요?
         </a>
 

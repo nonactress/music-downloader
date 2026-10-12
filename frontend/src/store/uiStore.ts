@@ -1,5 +1,6 @@
-// 화면 설정 — 글자 크게 (결정 46). 브라우저에 기억해서 다음에 열어도 유지
+// 화면 설정 — 글자 크게 (결정 46, 브라우저에 기억) · 도움말 창 (결정 47)
 import { create } from 'zustand'
+import type { HelpKey } from '../lib/help'
 
 export const BIG_TEXT_KEY = 'easy-music:big-text'
 /** 글자 크게 모드에서 화면 전체 배율 */
@@ -26,6 +27,10 @@ function applyBigText(on: boolean) {
 interface UiStore {
   bigText: boolean
   toggleBigText: () => void
+  /** 열려 있는 도움말 (null이면 닫힘) */
+  help: HelpKey | null
+  openHelp: (key: HelpKey) => void
+  closeHelp: () => void
 }
 
 export const useUiStore = create<UiStore>((set, get) => ({
@@ -35,6 +40,9 @@ export const useUiStore = create<UiStore>((set, get) => ({
     applyBigText(on)
     set({ bigText: on })
   },
+  help: null,
+  openHelp: (key) => set({ help: key }),
+  closeHelp: () => set({ help: null }),
 }))
 
 /** 앱을 열 때 기억해 둔 설정을 화면에 적용 */
