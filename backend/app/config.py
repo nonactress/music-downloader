@@ -5,6 +5,14 @@ from pathlib import Path
 REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
 # 기본값은 실행 위치와 상관없이 backend/data (API · worker가 같은 곳을 보게). Docker는 /data
 DATA_DIR = Path(os.environ.get("DATA_DIR") or Path(__file__).resolve().parents[1] / "data")
+# 로그인 계정 (결정 55). 24시간 정리 대상 아님. Docker: /accounts/users.json
+ACCOUNTS_FILE = Path(os.environ.get("ACCOUNTS_FILE") or Path(__file__).resolve().parents[1] / "accounts" / "users.json")
+# 로그인 세션 (결정 56 · 58)
+COOKIE_SECURE = os.environ.get("COOKIE_SECURE", "false").strip().lower() in ("1", "true", "yes")
+SESSION_TTL_SEC = 30 * 24 * 3600
+LOGIN_FAIL_WINDOW_SEC = 15 * 60
+LOGIN_FAIL_LIMIT_ID = 5
+LOGIN_FAIL_LIMIT_IP = 20
 FILE_TTL_HOURS = float(os.environ.get("FILE_TTL_HOURS", "24"))
 FILE_TTL_SEC = int(FILE_TTL_HOURS * 3600)
 MAX_DURATION_SEC = float(os.environ.get("MAX_DURATION_SEC", "1200"))  # 20분

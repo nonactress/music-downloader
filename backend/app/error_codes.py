@@ -14,6 +14,9 @@ MESSAGES = {
     "NOT_READY": "아직 준비 중이에요. 잠시만 기다려 주세요.",
     "RATE_LIMITED": "요청이 너무 많아요. 잠시 후 다시 시도해 주세요.",
     "INTERNAL": "문제가 생겼어요. 잠시 후 다시 시도해 주세요.",
+    "UNAUTHORIZED": "로그인이 필요해요. 다시 로그인해 주세요.",
+    "LOGIN_FAILED": "아이디나 비밀번호가 맞지 않아요. 다시 확인해 주세요.",
+    "LOGIN_LOCKED": "여러 번 틀려서 잠시 막혔어요. 15분 뒤에 다시 해 주세요.",
 }
 
 STATUS = {
@@ -24,6 +27,9 @@ STATUS = {
     "NOT_READY": 409,
     "RATE_LIMITED": 429,
     "INTERNAL": 500,
+    "UNAUTHORIZED": 401,
+    "LOGIN_FAILED": 401,
+    "LOGIN_LOCKED": 429,
 }
 
 
