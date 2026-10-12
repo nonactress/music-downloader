@@ -77,13 +77,13 @@ def test_selftest_passes(tmp_path, monkeypatch):
     import sys
     dist = tmp_path / "dist"
     dist.mkdir()
-    (dist / "index.html").write_text("<!doctype html><title>t</title>")
+    (dist / "index.html").write_text("<!doctype html><title>t</title>", encoding="utf-8")
     out = tmp_path / "selftest.txt"
     env = {**os.environ, "EASYMUSIC_HOME": str(tmp_path / "home"), "FRONTEND_DIST": str(dist)}
     root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     proc = subprocess.run([sys.executable, "-m", "desktop", "--selftest", "--selftest-out", str(out)],
                           cwd=root, env=env, capture_output=True, timeout=120)
-    text = out.read_text()
+    text = out.read_text(encoding="utf-8")
     assert proc.returncode == 0, text
     assert "SELFTEST OK" in text and "OK   /api/health" in text and "OK   ffmpeg convert" in text
 
@@ -111,3 +111,16 @@ def test_no_module_level_unix_only_imports():
                     names = [node.module.split(".")[0]]
                 bad += [f"{path.relative_to(root)}:{node.lineno} {n}" for n in names if n in UNIX_ONLY]
     assert bad == []
+
+
+def test_fetch_tools_console_survives_non_utf8_locale():
+    """CI 윈도우 콘솔은 cp1252 → 한글 print가 UnicodeEncodeError로 빌드를 멈췄을 것. 라틴-1 환경으로 흉내."""
+    import subprocess
+    import sys
+    root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    code = "import desktop.fetch_tools as f; f.safe_console(); print('받는 중: 한글')"
+    env = {**os.environ, "LC_ALL": "en_US.ISO8859-1", "LANG": "en_US.ISO8859-1", "PYTHONUTF8": "0"}
+    env.pop("PYTHONIOENCODING", None)
+    out = subprocess.run([sys.executable, "-c", code], cwd=root, env=env, capture_output=True)
+    assert out.returncode == 0, out.stderr.decode("utf-8", "replace")
+    assert b"\\ubc1b" in out.stdout   # 못 찍는 글자는 이스케이프로

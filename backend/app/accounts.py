@@ -116,7 +116,7 @@ def _locked():
     fcntl은 윈도우에 없으므로 쓰는 곳에서만 불러온다 (윈도우 프로그램도 이 모듈을 import함)."""
     path = _path()
     path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path.with_name(path.name + ".lock"), "w") as lock:
+    with open(path.with_name(path.name + ".lock"), "w", encoding="utf-8") as lock:
         if os.name == "nt":
             import msvcrt
             msvcrt.locking(lock.fileno(), msvcrt.LK_LOCK, 1)

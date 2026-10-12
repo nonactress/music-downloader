@@ -22,7 +22,7 @@ def test_worker_imports_without_fastapi():
         [sys.executable, "-c", CODE],
         cwd=ROOT,
         env={"PYTHONPATH": f"{ROOT / 'backend'}:{ROOT}", "PATH": ""},
-        capture_output=True, text=True,
+        capture_output=True, text=True, encoding="utf-8", errors="replace",
     )
     assert out.returncode == 0, out.stderr
     assert out.stdout.strip() == "ok"

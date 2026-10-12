@@ -48,7 +48,7 @@ def test_no_shell_true_anywhere():
     """subprocess는 인자 리스트로만 (shell=True · os.system · os.popen 금지)."""
     bad = []
     for path in _python_files():
-        tree = ast.parse(path.read_text(), filename=str(path))
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         for node in ast.walk(tree):
             if isinstance(node, ast.Call):
                 for kw in node.keywords:
@@ -76,9 +76,45 @@ def test_task_timeouts_set():
 
 def test_yt_dlp_only_lower_bound_pinned():
     """결정 51: yt-dlp는 하한만 고정 (== 금지), 이미지 빌드 때 최신을 받음."""
-    lines = [l.strip() for l in (ROOT / "worker/requirements.txt").read_text().splitlines()
+    lines = [l.strip() for l in (ROOT / "worker/requirements.txt").read_text(encoding="utf-8").splitlines()
              if l.strip().startswith("yt-dlp")]
     assert lines and all(">=" in l and "==" not in l for l in lines)
-    dockerfile = (ROOT / "worker/Dockerfile").read_text()
+    dockerfile = (ROOT / "worker/Dockerfile").read_text(encoding="utf-8")
     assert "ADD https://pypi.org/pypi/yt-dlp/json" in dockerfile
     assert dockerfile.index("ADD https://pypi.org/pypi/yt-dlp/json") < dockerfile.index("--upgrade \"yt-dlp[default]\"")
+
+
+def _text_io_without_encoding(node):
+    """encoding 없이 텍스트로 읽고 쓰는 호출인지. 윈도우 기본 인코딩(cp1252 · cp949)이면 한글 · 이모지에서 깨진다."""
+    if not isinstance(node, ast.Call) or any(k.arg == "encoding" for k in node.keywords):
+        return None
+    f = node.func
+    if isinstance(f, ast.Attribute) and f.attr in ("read_text", "write_text"):
+        return f.attr
+    if (isinstance(f, ast.Name) and f.id == "open") or (isinstance(f, ast.Attribute) and f.attr == "fdopen"):
+        mode = "r"
+        if len(node.args) > 1 and isinstance(node.args[1], ast.Constant):
+            mode = node.args[1].value
+        for k in node.keywords:
+            if k.arg == "mode" and isinstance(k.value, ast.Constant):
+                mode = k.value.value
+        return None if "b" in str(mode) else f"open({mode})"
+    name = f.attr if isinstance(f, ast.Attribute) else getattr(f, "id", "")
+    if name in ("run", "Popen", "check_output") and any(
+            k.arg in ("text", "universal_newlines") and isinstance(k.value, ast.Constant) and k.value.value
+            for k in node.keywords):
+        return f"{name}(text=True)"
+    return None
+
+
+def test_text_io_always_has_encoding():
+    """CI 윈도우(cp1252)에서 실제로 22개가 깨졌던 것 (B33 첫 CI). 앱 코드 · 테스트 모두."""
+    bad = []
+    for folder in ("backend", "worker", "desktop"):
+        for path in (ROOT / folder).rglob("*.py"):
+            tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+            for node in ast.walk(tree):
+                what = _text_io_without_encoding(node)
+                if what:
+                    bad.append(f"{path.relative_to(ROOT)}:{node.lineno} {what}")
+    assert bad == []

@@ -81,7 +81,7 @@ def test_extract_success(fake_ydl, tmp_path):
     s = json.loads(out)["streams"][0]
     assert s["sample_rate"] == "44100" and s["channels"] == 2
 
-    peaks = json.loads(config.track_peaks_path(track_id).read_text())
+    peaks = json.loads(config.track_peaks_path(track_id).read_text(encoding="utf-8"))
     assert peaks["trackId"] == track_id and peaks["pointsPerSecond"] == 20
     assert peaks["durationSec"] == t["durationSec"]
     assert len(peaks["peaks"]) == int(np.ceil(t["durationSec"] * 20))

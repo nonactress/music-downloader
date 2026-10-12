@@ -85,7 +85,7 @@ def test_save_errors_like_download(c, kind, code, status):
 
 def test_save_failed_when_folder_unwritable(c, dl):
     dl.parent.mkdir(parents=True, exist_ok=True)
-    dl.write_text("not a folder")                    # 폴더 자리에 파일 → 저장 실패
+    dl.write_text("not a folder", encoding="utf-8")                    # 폴더 자리에 파일 → 저장 실패
     res = c.post(f"/api/exports/{_export()}/save")
     assert res.status_code == 500
     assert res.json()["error"]["code"] == "SAVE_FAILED"

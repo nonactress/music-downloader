@@ -119,7 +119,7 @@ def _track(status="done", audio=b"0123456789" * 50, peaks=True):
         config.track_audio_path(tid).write_bytes(audio)
     if peaks:
         config.track_peaks_path(tid).write_text(
-            f'{{"trackId":"{tid}","durationSec":0.13,"pointsPerSecond":20,"peaks":[0.1,0.5,0.0]}}')
+            f'{{"trackId":"{tid}","durationSec":0.13,"pointsPerSecond":20,"peaks":[0.1,0.5,0.0]}}', encoding="utf-8")
     return tid
 
 

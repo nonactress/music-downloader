@@ -74,7 +74,8 @@ def _render(job_id: str, cmd: list[str], expected: float, log_path, base: int = 
     timed_out = threading.Event()
     with open(log_path, "wb") as err:
         proc = subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
-                                stderr=err, text=True, **media.popen_flags())
+                                stderr=err, text=True, encoding="utf-8", errors="replace",
+                                **media.popen_flags())
 
         def _kill_on_timeout():
             timed_out.set()

@@ -53,7 +53,7 @@ def _done_track(owner):
     store.update_track(t["trackId"], status="done", durationSec=100.0)
     config.TRACKS_DIR.mkdir(parents=True, exist_ok=True)
     config.track_audio_path(t["trackId"]).write_bytes(b"x" * 100)
-    config.track_peaks_path(t["trackId"]).write_text('{"peaks":[]}')
+    config.track_peaks_path(t["trackId"]).write_text('{"peaks":[]}', encoding="utf-8")
     return job["jobId"], t["trackId"]
 
 

@@ -21,7 +21,7 @@ def test_add_and_verify():
 def test_file_has_only_hash_and_is_private():
     accounts.add_user("grandma", "secret-pass")
     path = config.ACCOUNTS_FILE
-    raw = path.read_text()
+    raw = path.read_text(encoding="utf-8")
     assert "secret-pass" not in raw
     data = json.loads(raw)
     h = data["users"]["grandma"]["hash"]
@@ -33,7 +33,7 @@ def test_file_has_only_hash_and_is_private():
 def test_same_password_different_salt():
     accounts.add_user("a1", "same-pass")
     accounts.add_user("b1", "same-pass")
-    users = json.loads(config.ACCOUNTS_FILE.read_text())["users"]
+    users = json.loads(config.ACCOUNTS_FILE.read_text(encoding="utf-8"))["users"]
     assert users["a1"]["hash"] != users["b1"]["hash"]
 
 
@@ -72,9 +72,9 @@ def test_no_file_means_no_users():
 
 def test_corrupt_hash_rejected():
     accounts.add_user("grandma", "secret-pass")
-    data = json.loads(config.ACCOUNTS_FILE.read_text())
+    data = json.loads(config.ACCOUNTS_FILE.read_text(encoding="utf-8"))
     data["users"]["grandma"]["hash"] = "garbage"
-    config.ACCOUNTS_FILE.write_text(json.dumps(data))
+    config.ACCOUNTS_FILE.write_text(json.dumps(data), encoding="utf-8")
     assert accounts.verify("grandma", "secret-pass") is None
 
 

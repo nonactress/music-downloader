@@ -17,7 +17,7 @@ class InstanceLock:
 
     def acquire(self) -> "InstanceLock":
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        f = open(self.path, "a+")
+        f = open(self.path, "a+", encoding="utf-8")
         try:
             if os.name == "nt":
                 import msvcrt
