@@ -11,6 +11,13 @@ import { mockApi } from './mock'
 
 const BASE = '/api'
 
+/** 쓰는 중 세션이 끝나 401이 오면 (결정 60). 로그인 · 로그인 확인 · 나가기 요청의 401은 제외 */
+let onUnauthorized: () => void = () => {}
+export function setUnauthorizedHandler(fn: () => void) {
+  onUnauthorized = fn
+}
+const AUTH_PATHS = ['/auth/login', '/auth/me', '/auth/logout']
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let res: Response
   try {
@@ -24,6 +31,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   if (res.status === 204) return undefined as T
   const body = await res.json().catch(() => null)
   if (!res.ok) {
+    if (res.status === 401 && !AUTH_PATHS.includes(path)) onUnauthorized()
     throw new ApiError(body?.error ?? FALLBACK_ERROR, res.status)
   }
   return body as T

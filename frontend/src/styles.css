@@ -59,7 +59,7 @@ a:hover { color: var(--c-primary-hover); }
   padding: 20px 40px; background: var(--c-surface); border-bottom: 2px solid var(--c-line);
 }
 .header__logo { font-size: 26px; font-weight: 700; }
-.header__tools { display: flex; gap: 10px; }
+.header__tools { display: flex; gap: 10px; margin-left: auto; } /* 줄이 바뀌어도(글자 크게 + [나가기]) 오른쪽에 */
 .header__btn {
   height: var(--h-header-btn); padding: 0 18px; border: 2px solid var(--c-text); border-radius: 12px;
   background: var(--c-surface); font-size: 20px; font-weight: 600;

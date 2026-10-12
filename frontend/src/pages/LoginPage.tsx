@@ -7,10 +7,12 @@ import { useAuthStore } from '../store/authStore'
 
 export function LoginPage() {
   const login = useAuthStore((s) => s.login)
+  // 쓰는 중 세션이 끝나서 왔으면 처음부터 안내 (결정 60)
+  const notice = useAuthStore((s) => s.notice)
   const [loginId, setLoginId] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(notice)
   const [submitting, setSubmitting] = useState(false)
 
   // form submit이라 입력칸에서 Enter를 눌러도 로그인

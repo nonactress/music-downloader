@@ -1,5 +1,6 @@
 // 새로고침 · 창을 실수로 닫아도 이어서 (결정 48)
 // 편집 내용 · 되돌리기 기록 · 노래 정보 · 진행 중인 작업을 브라우저에 저장하고, 다시 열면 이어 간다
+// 저장할 때 누구 것인지(loginId)도 적어 두고, 다른 아이디로 로그인하면 지운다 (결정 60)
 import type { EditJson, TrackInfo } from '../api/types'
 import { useEditStore, type Change } from './editStore'
 import { useFlowStore, type Screen } from './flowStore'
@@ -9,7 +10,9 @@ export const SESSION_KEY = 'easy-music:session'
 export const RESTORE_LIMIT_MS = 23 * 60 * 60 * 1000
 
 interface Saved {
-  v: 1
+  /** 2: loginId 추가 (6단계). 1은 누구 것인지 몰라 버린다 */
+  v: 2
+  loginId: string
   startedAt: number
   edit: EditJson
   history: { edit: EditJson; change: Change }[]
@@ -24,8 +27,10 @@ interface Saved {
 const LIVE_SCREENS: Screen[] = ['trim', 'speed']
 
 let beforeLive: { edit: EditJson; history: Saved['history'] } | null = null
+/** 지금 편집 내용의 주인 — 로그인하기 전(확인 중 · 나간 뒤)엔 null이고 저장하지 않는다 */
+let owner: string | null = null
 
-function snapshot(): Saved | null {
+function snapshot(loginId: string): Saved | null {
   const flow = useFlowStore.getState()
   const store = useEditStore.getState()
   if (flow.startedAt === null) return null
@@ -38,7 +43,8 @@ function snapshot(): Saved | null {
   if (store.edit.tracks.length === 0 && !job) return null
   const base = LIVE_SCREENS.includes(flow.screen) && beforeLive ? beforeLive : store
   return {
-    v: 1,
+    v: 2,
+    loginId,
     startedAt: flow.startedAt,
     edit: base.edit,
     history: base.history,
@@ -50,8 +56,9 @@ function snapshot(): Saved | null {
 }
 
 function save() {
+  if (owner === null) return
   try {
-    const data = snapshot()
+    const data = snapshot(owner)
     if (data) localStorage.setItem(SESSION_KEY, JSON.stringify(data))
     else localStorage.removeItem(SESSION_KEY)
   } catch {
@@ -73,7 +80,7 @@ function read(now: number): Saved | null {
     const raw = localStorage.getItem(SESSION_KEY)
     if (!raw) return null
     const data = JSON.parse(raw) as Saved
-    if (data.v !== 1 || typeof data.startedAt !== 'number' || !Array.isArray(data.edit?.tracks)) return null
+    if (data.v !== 2 || typeof data.loginId !== 'string' || typeof data.startedAt !== 'number' || !Array.isArray(data.edit?.tracks)) return null
     if (now - data.startedAt >= RESTORE_LIMIT_MS || now < data.startedAt) return null
     return data
   } catch {
@@ -81,10 +88,32 @@ function read(now: number): Saved | null {
   }
 }
 
-/** 앱을 열 때 한 번: 저장해 둔 것이 있으면 이어 가고, 그 뒤로 바뀔 때마다 저장 */
+/** 편집 내용 · 화면을 처음 상태로 + 저장해 둔 것 지우기 */
+function resetAll() {
+  beforeLive = null
+  useEditStore.getState().reset()
+  useFlowStore.setState(useFlowStore.getInitialState())
+  clearSession()
+}
+
+/** 로그인 확인 · 로그인이 끝나면: 같은 아이디면 이어서, 다른 아이디면 앞 사람 것을 지운다 (결정 60) */
+export function beginUser(loginId: string) {
+  if (owner !== loginId) resetAll()
+  owner = loginId
+}
+
+/** [나가기] — 이 브라우저에 저장한 편집 내용을 지운다 (결정 59) */
+export function endUser() {
+  owner = null
+  resetAll()
+}
+
+/** 앱을 열 때 한 번: 저장해 둔 것이 있으면 이어 가고, 그 뒤로 바뀔 때마다 저장.
+ *  누구 것인지는 로그인 확인(beginUser) 뒤에 따진다 */
 export function initSession(now = Date.now()) {
   const data = read(now)
   if (data) {
+    owner = data.loginId
     useEditStore.setState({ edit: data.edit, history: data.history, trackInfo: data.trackInfo })
     const common = { startedAt: data.startedAt, lastUrl: data.lastUrl, appendUrl: data.appendUrl, exportResult: null }
     if (data.job?.kind === 'extract') {
