@@ -1,11 +1,12 @@
 from app import store
+from tests.conftest import OWNER
 
 
 def test_get_job(client):
-    job = store.create_job("extract")
+    job = store.create_job("extract", owner=OWNER)
     res = client.get(f"/jobs/{job['jobId']}")
     assert res.status_code == 200
-    assert res.json() == job
+    assert res.json() == {k: v for k, v in job.items() if k != "owner"}  # 주인은 응답에 안 나감
     assert list(res.json()) == ["jobId", "kind", "status", "progress", "etaSeconds",
                                 "track", "result", "error"]
 

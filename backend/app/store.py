@@ -53,7 +53,8 @@ def _update(key: str, value: dict) -> None:
 
 # ---- 작업 (job) -------------------------------------------------------------
 
-def create_job(kind: str) -> dict:
+def create_job(kind: str, owner: str | None = None) -> dict:
+    """owner: 만든 사람 아이디 (결정 57). GET /jobs 응답에서는 빠진다."""
     job = {
         "jobId": new_id("j"),
         "kind": kind,
@@ -63,6 +64,7 @@ def create_job(kind: str) -> dict:
         "track": None,
         "result": None,
         "error": None,
+        "owner": owner,
     }
     _create(f"job:{job['jobId']}", job)
     return job
@@ -96,8 +98,8 @@ def fail_job(job_id: str, error: dict) -> dict | None:
 # {"trackId", "jobId", "status": queued|running|done|failed, "title", "channel",
 #  "durationSec", "thumbnailUrl", "url"}
 
-def create_track(job_id: str, url: str) -> dict:
-    track = {"trackId": new_id("t"), "jobId": job_id, "status": "queued", "url": url}
+def create_track(job_id: str, url: str, owner: str | None = None) -> dict:
+    track = {"trackId": new_id("t"), "jobId": job_id, "status": "queued", "url": url, "owner": owner}
     _create(f"track:{track['trackId']}", track)
     return track
 
@@ -118,8 +120,8 @@ def update_track(track_id: str, **fields: Any) -> dict | None:
 # ---- 내보내기 (export) ------------------------------------------------------
 # {"exportId", "jobId", "status", "fileName", "trackCount", "durationSec", "sizeBytes"}
 
-def create_export(job_id: str) -> dict:
-    exp = {"exportId": new_id("e"), "jobId": job_id, "status": "queued"}
+def create_export(job_id: str, owner: str | None = None) -> dict:
+    exp = {"exportId": new_id("e"), "jobId": job_id, "status": "queued", "owner": owner}
     _create(f"export:{exp['exportId']}", exp)
     return exp
 
@@ -135,6 +137,13 @@ def update_export(export_id: str, **fields: Any) -> dict | None:
     exp.update(fields)
     _update(f"export:{export_id}", exp)
     return exp
+
+
+def owned(record: dict | None, login_id: str) -> dict | None:
+    """만든 사람이 맞을 때만 기록을 돌려준다. 남의 것 · 주인 없는 옛 기록은 None → 404 (결정 57)."""
+    if record is None or record.get("owner") is None or record.get("owner") != login_id:
+        return None
+    return record
 
 
 # ---- 요청 수 제한 -----------------------------------------------------------

@@ -3,7 +3,8 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app import config
-from app.main import app
+from app.main import app  # noqa: F401
+from tests.conftest import login_client
 
 VID = "dQw4w9WgXcQ"
 NGINX = "172.18.0.5"      # compose 내부망 (기본 신뢰 대역)
@@ -11,7 +12,7 @@ OUTSIDE = "203.0.113.7"   # 인터넷에서 바로 접속
 
 
 def _client(peer):
-    return TestClient(app, client=(peer, 50000), raise_server_exceptions=False)
+    return login_client(peer)
 
 
 def _post(c, xff=None):

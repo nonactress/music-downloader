@@ -3,11 +3,12 @@ from urllib.parse import quote
 import pytest
 
 from app import config, queue, store
+from tests.conftest import OWNER
 
 
-def _ready_track(duration=200.0, status="done", with_file=True):
-    job = store.create_job("extract")
-    t = store.create_track(job["jobId"], "https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+def _ready_track(duration=200.0, status="done", with_file=True, owner=OWNER):
+    job = store.create_job("extract", owner=owner)
+    t = store.create_track(job["jobId"], "https://www.youtube.com/watch?v=dQw4w9WgXcQ", owner=owner)
     store.update_track(t["trackId"], status=status, durationSec=duration)
     if with_file:
         config.TRACKS_DIR.mkdir(parents=True, exist_ok=True)
@@ -96,9 +97,9 @@ def test_source_not_ready(client, status):
     assert res.status_code == 409 and res.json()["error"]["code"] == "NOT_READY"
 
 
-def _done_export(data=b"0123456789" * 100):
-    job = store.create_job("export")
-    exp = store.create_export(job["jobId"])
+def _done_export(data=b"0123456789" * 100, owner=OWNER):
+    job = store.create_job("export", owner=owner)
+    exp = store.create_export(job["jobId"], owner=owner)
     config.EXPORTS_DIR.mkdir(parents=True, exist_ok=True)
     config.export_path(exp["exportId"]).write_bytes(data)
     store.update_export(exp["exportId"], status="done", fileName="내 노래_1011.mp3")
@@ -128,8 +129,8 @@ def test_download_range(client):
 
 
 def test_download_not_ready(client):
-    job = store.create_job("export")
-    exp = store.create_export(job["jobId"])
+    job = store.create_job("export", owner=OWNER)
+    exp = store.create_export(job["jobId"], owner=OWNER)
     res = client.get(f"/exports/{exp['exportId']}/download")
     assert res.status_code == 409 and res.json()["error"]["code"] == "NOT_READY"
 
@@ -150,8 +151,8 @@ def test_twenty_tracks_ok_twenty_one_rejected(client):
 
 def test_download_render_failed_is_404(client):
     """CONTRACT v1.3: 렌더링이 실패한 내보내기 → 404 NOT_FOUND (409 아님)."""
-    job = store.create_job("export")
-    exp = store.create_export(job["jobId"])
+    job = store.create_job("export", owner=OWNER)
+    exp = store.create_export(job["jobId"], owner=OWNER)
     store.update_export(exp["exportId"], status="failed")
     res = client.get(f"/exports/{exp['exportId']}/download")
     assert res.status_code == 404 and res.json()["error"]["code"] == "NOT_FOUND"
