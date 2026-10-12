@@ -91,3 +91,35 @@ for (const width of [1280, 1440]) {
     await expectNoHorizontalScroll(page, '⑦')
   })
 }
+
+/** 글자 하나하나의 줄(top) — 한 단어가 두 줄로 갈라지면 2개 이상 */
+async function linesOf(page: Page, word: string) {
+  return page.evaluate((w) => {
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT)
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+      const i = n.textContent!.indexOf(w)
+      if (i < 0) continue
+      const tops = new Set<number>()
+      for (let k = i; k < i + w.length; k++) {
+        const r = document.createRange()
+        r.setStart(n, k)
+        r.setEnd(n, k + 1)
+        tops.add(Math.round(r.getBoundingClientRect().top))
+      }
+      return tops.size
+    }
+    return -1
+  }, word)
+}
+
+test('한글 단어 중간에서 줄이 바뀌지 않음 (keep-all) — 글자 크게 ③ 타일 "비슷하게" · ① 그림 설명 "열어요"', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('easy-music:big-text', '1'))
+  await page.goto('/')
+  expect(await page.locator('.page').evaluate((el) => getComputedStyle(el).wordBreak)).toBe('keep-all')
+  expect(await linesOf(page, '열어요')).toBe(1)
+  await routeAudio(page)
+  await openEditHome(page)
+  await appendSecond(page)
+  expect(await linesOf(page, '비슷하게')).toBe(1)
+  expect(await linesOf(page, '자연스럽게')).toBe(1)
+})
