@@ -1,6 +1,7 @@
 celery==5.6.3
 redis==8.1.0
 pydantic==2.14.0
-yt-dlp[default]==2026.8.19
+# 유튜브가 바뀌면 자주 고장 → 하한만 고정, 이미지 빌드 때 최신을 받음 (결정 51)
+yt-dlp[default]>=2026.8.19
 numpy==2.5.4
 tzdata==2026.5
