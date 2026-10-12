@@ -366,3 +366,4 @@ music-downloader/
 | 49 | 배포 구성(5단계 MVP): Docker Compose 한 벌 = `web`(nginx: 프론트 정적 파일 + `/api` → api) · `api` · `worker` · `redis`. 사용자는 `web`(80) 하나로 접속. Cloud Run · GCS 이전은 MVP 뒤 (배포 대상은 GitHub 이슈로 사용자 확인) | PLAN 7장 "Docker Compose → Cloud Run" |
 | 50 | 요청 수 제한의 IP: `TRUSTED_PROXY_IPS`(기본: compose 내부망)에서 온 요청만 `X-Forwarded-For` 맨 오른쪽 값을 믿음, 그 밖은 접속 IP | 위조 방지 (backend 메모 반영) |
 | 51 | yt-dlp 고장 대비: 이미지 빌드 때 yt-dlp 최신을 받음(하한만 고정), README에 "다운로드가 안 되면 `docker compose build --pull worker && docker compose up -d worker`" 절차 | PLAN 12장 "버전 업데이트 루틴" |
+| 52 | 디스크 남용 방지: `POST /tracks`는 IP당 하루(Asia/Seoul 자정 기준이 아니라 24시간 창) 100곡까지, 넘으면 429 `RATE_LIMITED`(문구 그대로). `DAILY_TRACK_LIMIT` 환경 변수로 조정 | B14 위험(시간당 17GB) — 공개 범위와 상관없이 안전장치 (리드 결정) |

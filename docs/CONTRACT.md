@@ -58,7 +58,7 @@
 |---|---|---|
 | 유튜브 주소 아님 (허용 호스트: `youtube.com`, `www.youtube.com`, `m.youtube.com`, `music.youtube.com`, `youtu.be`) | 400 | `INVALID_URL` |
 | 재생목록 주소 (`/playlist?list=...`) | 400 | `PLAYLIST_NOT_ALLOWED` |
-| 요청이 너무 많음 | 429 | `RATE_LIMITED` |
+| 요청이 너무 많음 (IP당 분당 10번, 또는 **IP당 하루 100곡**) | 429 | `RATE_LIMITED` |
 
 - `watch?v=...&list=...`처럼 영상 ID가 있으면 **그 영상 하나만** 가져온다 (yt-dlp `--no-playlist`).
 - 영상 길이 검사(20분 초과)는 작업 안에서 한다 → 작업이 `failed` + `TOO_LONG`.
@@ -289,3 +289,4 @@ HTTP 에러 응답과 작업 `error` 필드는 **같은 모양**을 쓴다.
 | v1.2 | 2026-10-11 | Edit JSON `tracks` 최대 20개 |
 | v1.3 | 2026-10-11 | 실패한 노래 · 내보내기를 가리키는 요청은 404 `NOT_FOUND` (409는 "끝나면 될" 때만) |
 | v1.4 | 2026-10-11 | `normalize` 설명을 구현 방식(loudnorm) 대신 목표값으로 — 동작 · 필드는 그대로 |
+| v1.5 | 2026-10-12 | `POST /tracks` IP당 하루 100곡 한도 (429 `RATE_LIMITED` 재사용, 새 코드 없음) |
