@@ -4,8 +4,10 @@
 
 ```
 backend/app/
-  main.py            FastAPI 앱 (라우터 · 에러 핸들러 연결)
-  routers/           tracks.py (POST /tracks, audio, peaks) · jobs.py · exports.py
+  main.py            FastAPI 앱 (라우터 · 에러 핸들러 연결, 로그인 필요 범위)
+  routers/           auth.py (로그인) · tracks.py (POST /tracks, audio, peaks) · jobs.py · exports.py
+  accounts.py        로그인 계정 파일 + 관리 명령 `python -m app.accounts` (결정 55)
+  sessions.py        로그인 세션 (Redis, 30일) · 틀린 로그인 막기 (결정 56 · 58)
   schemas.py         요청 모양 (Edit JSON, camelCase alias)
   youtube.py         유튜브 주소 검사 → 표준 주소로 재구성
   ffmpeg_builder.py  Edit JSON → ffmpeg filter_complex · 인자 리스트 (PLAN 10장)
@@ -61,14 +63,20 @@ PYTHONPATH=backend:. .venv/bin/celery -A worker.celery_app worker -B \
 - 파일은 기본으로 `backend/data/`에 쌓인다 (git 제외). API와 worker가 같은 곳을 보도록 `DATA_DIR`을 바꿀 때는 둘 다 같은 값으로.
 - 프론트 개발 서버는 `/api/*`를 `:8000`으로 넘긴다 (CONTRACT 0장).
 
-빠른 확인:
+빠른 확인 (6단계부터 모든 API에 로그인이 필요하다):
 
 ```bash
-curl -s -XPOST localhost:8000/tracks -H 'content-type: application/json' \
+(cd backend && ../.venv/bin/python -m app.accounts add tester)   # 처음 한 번, 비밀번호 두 번 입력
+curl -s -c /tmp/em.jar -XPOST localhost:8000/auth/login -H 'content-type: application/json' \
+  -d '{"loginId":"tester","password":"<비밀번호>"}'
+# → {"user":{"loginId":"tester"}}
+curl -s -b /tmp/em.jar -XPOST localhost:8000/tracks -H 'content-type: application/json' \
   -d '{"url":"https://youtu.be/jNQXAC9IVRw"}'
 # → {"jobId":"j_…","trackId":"t_…"}
-curl -s localhost:8000/jobs/<jobId>
+curl -s -b /tmp/em.jar localhost:8000/jobs/<jobId>
 ```
+
+로컬 계정 파일은 `backend/accounts/users.json` (git 제외).
 
 ## 환경 변수
 
@@ -78,6 +86,8 @@ curl -s localhost:8000/jobs/<jobId>
 | `DATA_DIR` | `backend/data` (Docker: `/data`) | 추출 파일(`tracks/`) · 결과 파일(`exports/`) |
 | `FILE_TTL_HOURS` | `24` | 파일 · 기록 보관 시간 (지나면 삭제) |
 | `MAX_DURATION_SEC` | `1200` | 이보다 긴 영상은 `TOO_LONG` (20분) |
+| `ACCOUNTS_FILE` | `backend/accounts/users.json` (Docker: `/accounts/users.json`) | 로그인 계정(아이디 + scrypt 해시). 24시간 정리 대상 아님 (결정 55) |
+| `COOKIE_SECURE` | `false` | `true`면 로그인 쿠키에 `Secure` — **HTTPS로 배포하면 반드시 `true`** (결정 56) |
 | `TZ` | `Asia/Seoul` | 결과 파일 이름 `내 노래_MMDD.mp3`의 날짜 기준 |
 | `TRUSTED_PROXY_IPS` | `127.0.0.1/32,::1/128,172.16.0.0/12,192.168.0.0/16` | 이 주소(쉼표로 구분한 IP · 대역)에서 온 요청만 `X-Forwarded-For` 맨 오른쪽 값을 사용자 IP로 믿음. 그 밖은 접속 IP (결정 50) |
 | `DAILY_TRACK_LIMIT` | `100` | IP당 지난 24시간 동안 `POST /tracks`로 받을 수 있는 노래 수. 넘으면 429 (결정 52). `0`이면 끔 |
@@ -96,6 +106,28 @@ cd backend && ../.venv/bin/pytest        # backend/tests + worker/tests
 - yt-dlp는 가짜로 바꿔서 테스트한다 → 유튜브 접속 없이 돈다. 실제 유튜브 확인은 위 "빠른 확인"으로.
 - 느린 측정 테스트는 기본 실행에서 빠진다. 최악 경우 렌더링(20분 × 20곡, 약 3분):
   `../.venv/bin/pytest -m slow -s tests/test_render_worst_case.py` (작게: `WORST_TRACKS=4 WORST_MINUTES=5` 앞에 붙이기)
+
+## 계정 관리 (관리자) — 결정 54 · 55
+
+회원가입 · 비밀번호 찾기는 없다. 관리자가 계정을 만들어 아이디와 비밀번호를 직접 알려 준다. 모든 명령은 **서버에서** 실행한다 (로컬은 `docker compose exec api` 대신 `cd backend && ../.venv/bin/python -m app.accounts …`).
+
+| 할 일 | 명령 |
+|---|---|
+| 계정 만들기 | `docker compose exec api python -m app.accounts add <아이디>` → 비밀번호 두 번 입력(화면에 안 보임) |
+| 비밀번호 바꾸기 · 잊어버렸을 때 | `docker compose exec api python -m app.accounts passwd <아이디>` |
+| 계정 지우기 | `docker compose exec api python -m app.accounts remove <아이디>` |
+| 계정 목록 | `docker compose exec api python -m app.accounts list` (아이디 · 만든 날만, 비밀번호는 안 보임) |
+
+- 아이디: 영어 소문자 · 숫자 · `.` `_` `-` 2~32자. 대문자 · 앞뒤 공백은 로그인할 때 알아서 소문자 · 제거된다 (`Grandma ` = `grandma`). 비밀번호: 6자 이상.
+- `passwd` · `remove`를 하면 그 사람이 로그인해 둔 모든 브라우저가 바로 로그아웃된다 (출력에 "로그인 N곳 끊음").
+- 바뀐 내용은 재시작 없이 바로 적용된다.
+- 로그인은 한 번 하면 **30일** 유지 (쓸 때마다 늘어남). Redis를 다시 시작하면 모두 다시 로그인해야 한다.
+- **여러 번 틀려서 막힘**: 같은 아이디로 15분 안에 5번(또는 같은 IP로 20번) 틀리면 15분 동안 막힌다 ("여러 번 틀려서 잠시 막혔어요"). 기다리기 어려우면 관리자가 풀 수 있다:
+  ```bash
+  docker compose exec redis redis-cli del loginlock:id:<아이디>      # 아이디 막힘 풀기
+  docker compose exec redis redis-cli del loginlock:ip:<IP>          # IP 막힘 풀기
+  ```
+- 계정마다 노래 · 작업이 따로다. 다른 계정의 노래는 보이지 않는다 (결정 57).
 
 ## 서버 1대 배포 점검 목록 (결정 49)
 
@@ -117,6 +149,8 @@ cd backend && ../.venv/bin/pytest        # backend/tests + worker/tests
 
 - [ ] 바깥에 여는 포트는 `web`(compose `8080:80`) **하나뿐**. `api`(8000) · `redis`(6379)는 `127.0.0.1`에만 묶여 있는지 (`docker compose ps`). 비밀번호 없는 Redis · X-Forwarded-For 위조 방지(B12)
 - [ ] HTTPS: compose에는 TLS가 없다 → 서버 앞단(로드밸런서 · 리버스 프록시)에서 처리. 앞단을 하나 더 두면 그 주소 대역을 `TRUSTED_PROXY_IPS`에 넣어야 하고, 지금 구현은 X-Forwarded-For **한 단계**만 보므로 다시 검토 필요
+- [ ] **계정부터 만들기**: 계정이 하나도 없으면 아무도 로그인할 수 없다 → 위 "계정 관리"의 `add`로 쓸 사람 계정을 만들고 한 번 로그인해 본다
+- [ ] **HTTPS면 `COOKIE_SECURE=true`** (compose `x-app-env`). HTTP로만 쓰면 `false` 그대로 (true면 HTTP에서 로그인이 유지되지 않음)
 - [ ] 환경 변수(위 표): 보통은 compose 기본값 그대로. `TZ=Asia/Seoul`(파일 이름 날짜), `EXPORT_TIMEOUT_SEC=900`, `MAX_DURATION_SEC=1200`
 - [ ] `docker compose logs worker | grep "yt-dlp "` 로 yt-dlp 버전 확인, 실제 유튜브 주소 하나로 ① → ⑦ 한 번 끝까지
 - [ ] `curl -s http://localhost:8000/health` → `{"ok":true}` (서버 안에서)
@@ -124,8 +158,9 @@ cd backend && ../.venv/bin/pytest        # backend/tests + worker/tests
 
 ### 백업 · 운영
 
-- **백업 필요 없음**: `media` 볼륨과 Redis의 작업 기록은 모두 24시간짜리 임시 데이터다. 서버가 날아가도 사용자는 처음부터 다시 하면 된다 (브라우저 이어서 하기는 23시간 안 · 서버 파일이 있을 때만).
-- Redis는 영속 저장이 필요 없다 (재시작하면 진행 중이던 작업만 사라짐).
+- **백업이 필요한 것은 `accounts` 볼륨(`/accounts/users.json`) 하나**: 계정은 24시간 정리 대상이 아니다. 작은 파일이라 계정을 바꿀 때마다 복사해 두면 된다 (`docker compose cp api:/accounts/users.json ./users.json.bak`). 잃어버려도 계정을 다시 만들면 된다.
+- **나머지는 백업 필요 없음**: `media` 볼륨과 Redis의 작업 기록은 모두 24시간짜리 임시 데이터다. 서버가 날아가도 사용자는 처음부터 다시 하면 된다 (브라우저 이어서 하기는 23시간 안 · 서버 파일이 있을 때만).
+- Redis는 영속 저장이 필요 없다 (재시작하면 진행 중이던 작업과 로그인 세션만 사라짐 → 다시 로그인).
 - 업데이트: `git pull && docker compose up -d --build`. 진행 중인 추출 · 저장은 실패로 끝나고 사용자가 다시 시도하면 된다.
 - yt-dlp 고장: 아래 절차.
 - 유튜브가 서버 IP를 막을 수 있다(PLAN 14장 리스크) — 증상은 yt-dlp 고장과 비슷("Sign in to confirm you're not a bot"). yt-dlp를 올려도 계속되면 IP 차단을 의심.
@@ -153,6 +188,7 @@ cd backend && ../.venv/bin/pytest        # backend/tests + worker/tests
 
 | 항목 | 구현 |
 |---|---|
+| 아는 사람만 | 모든 API 로그인 필요(`/health` · `/auth/login` 제외), 계정은 관리자만 만듦, 비밀번호는 scrypt 해시만 저장, 세션 토큰은 Redis에 해시로, 틀린 로그인 15분 잠금, 남의 노래 · 작업은 404 (결정 54~58) |
 | 유튜브만 | `youtube.py` — 허용 호스트 5개, 영상 ID를 뽑아 `https://www.youtube.com/watch?v=<ID>`로 다시 만들어 yt-dlp에 전달 |
 | 재생목록 · 긴 영상 | `/playlist` 거절, `noplaylist`, 20분 초과 `TOO_LONG` |
 | 명령어 주입 | subprocess는 인자 리스트로만 (`test_safety.py`가 `shell=True` · `os.system` · 문자열 명령을 찾으면 실패) |
