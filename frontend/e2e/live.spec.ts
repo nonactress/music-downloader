@@ -1,4 +1,5 @@
 // 실제 백엔드 연동 확인용 (LIVE=1일 때만). 유튜브에서 실제로 받아오므로 평소에는 건너뛴다.
+// 계정은 backend 관리 명령으로 미리 만든다: cd backend && ../.venv/bin/python -m app.accounts add livetest
 import { execFileSync } from 'node:child_process'
 import { mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -9,6 +10,24 @@ test.skip(!process.env.LIVE, 'LIVE=1일 때만')
 
 // "Me at the zoo" — 19초짜리 짧은 영상
 const VIDEO = 'https://www.youtube.com/watch?v=jNQXAC9IVRw'
+
+// 6단계: 모든 API가 로그인 필요 (CONTRACT 5장)
+const USER1 = { id: process.env.LIVE_ID ?? 'livetest', pw: process.env.LIVE_PW ?? 'live-pass-1' }
+const USER2 = { id: process.env.LIVE_ID2 ?? 'livetest2', pw: process.env.LIVE_PW2 ?? 'live-pass-1' }
+
+/** ⓪ 로그인 화면에서 로그인 → ① */
+async function login(page: Page, user: { id: string; pw: string }) {
+  await expect(page.getByRole('heading', { name: '로그인해 주세요' })).toBeVisible()
+  await page.getByLabel('아이디', { exact: true }).fill(user.id)
+  await page.getByLabel('비밀번호', { exact: true }).fill(user.pw)
+  await page.getByRole('button', { name: '로그인' }).click()
+  await expect(page.getByRole('heading', { name: '유튜브 주소를 넣어주세요' })).toBeVisible()
+}
+
+test.beforeEach(async ({ page }) => {
+  await page.goto('/')
+  await login(page, USER1)
+})
 
 async function importToEditHome(page: Page) {
   await page.goto('/')
@@ -206,4 +225,40 @@ test('실제 백엔드 전체 흐름: ① → ② → ③ 붙이기 · 자르기
   await page.reload()
   await expect(page.getByRole('heading', { name: '노래를 다듬어 주세요' })).toBeVisible()
   await expect(page.getByRole('article')).toHaveCount(2)
+})
+
+test('실제 백엔드 로그인: [나가기] → 다시 로그인하면 ①, 다른 계정으로는 앞 사람 노래 · 작업 404', async ({ page }) => {
+  test.setTimeout(240_000)
+  await importToEditHome(page)
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('easy-music:session')!))
+  expect(saved.loginId).toBe(USER1.id)
+  const trackId: string = saved.edit.tracks[0].sourceId
+  const own = await page.request.get(`/api/tracks/${trackId}/audio`)
+  expect([200, 206]).toContain(own.status())
+
+  // [나가기] → 서버 세션 끝 + 저장한 편집 내용 지움
+  await page.getByRole('button', { name: '나가기' }).click()
+  await expect(page.getByRole('heading', { name: '로그인해 주세요' })).toBeVisible()
+  expect(await page.evaluate(() => localStorage.getItem('easy-music:session'))).toBeNull()
+  expect((await page.request.get('/api/auth/me')).status()).toBe(401)
+  expect((await page.request.get(`/api/tracks/${trackId}/audio`)).status()).toBe(401)
+  await page.screenshot({ path: 'e2e/screenshots/live-login.png', fullPage: true })
+
+  // 같은 아이디로 다시 들어와도 ①부터
+  await login(page, USER1)
+  await expect(page.getByLabel('유튜브 주소')).toHaveValue('')
+  await page.getByRole('button', { name: '나가기' }).click()
+
+  // 다른 계정: 틀린 비밀번호는 LOGIN_FAILED 문구 그대로 → 맞게 넣으면 ①, 앞 사람 것은 404
+  await page.getByLabel('아이디', { exact: true }).fill(USER2.id)
+  await page.getByLabel('비밀번호', { exact: true }).fill(`${USER2.pw}-wrong`)
+  await page.getByRole('button', { name: '로그인' }).click()
+  await expect(page.getByRole('alert')).toHaveText('아이디나 비밀번호가 맞지 않아요. 다시 확인해 주세요.')
+  await login(page, USER2)
+  expect((await page.request.get(`/api/tracks/${trackId}/audio`)).status()).toBe(404)
+  expect((await page.request.get(`/api/tracks/${trackId}/peaks`)).status()).toBe(404)
+  const exp = await page.request.post('/api/exports', {
+    data: { tracks: [{ sourceId: trackId, start: 0, end: 5, speed: 1, keepPitch: true }], crossfade: 2, normalize: true, format: 'mp3' },
+  })
+  expect(exp.status()).toBe(404)
 })
