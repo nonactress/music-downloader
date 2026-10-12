@@ -58,7 +58,9 @@ test('잇기가 켜져 있고 2초 이하로 남긴 노래가 있으면 저장�
     '1번 노래가 너무 짧아서 부드럽게 이을 수 없어요. 더 길게 남기거나 [노래 사이 부드럽게 잇기]를 꺼 주세요.')
   expect(posted).toBe(0)
 
+  // 원인을 고치면 안내가 바로 사라짐
   await crossfade(page).uncheck()
+  await expect(page.getByRole('alert')).toHaveCount(0)
   await page.getByRole('button', { name: '다 됐어요, 저장하기' }).click()
   await expect(page.getByRole('heading', { name: '노래를 만들고 있어요' })).toBeVisible()
   expect(posted).toBe(1)

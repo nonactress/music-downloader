@@ -119,4 +119,7 @@ test('③ POST /exports 4xx는 편집 홈에 message 그대로', async ({ page }
   await openEditHome(page)
   await page.getByRole('button', { name: '다 됐어요, 저장하기' }).click()
   await expect(page.getByRole('alert')).toHaveText('노래를 찾을 수 없어요. 처음부터 다시 해주세요.')
+  // Edit JSON이 바뀌면 서버 안내도 지운다
+  await page.getByRole('checkbox', { name: /소리 크기 고르게 맞추기/ }).uncheck()
+  await expect(page.getByRole('alert')).toHaveCount(0)
 })

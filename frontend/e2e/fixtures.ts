@@ -1,7 +1,10 @@
 // /api를 CONTRACT 형식 응답으로 가로채는 도우미
+import { mkdirSync, openSync, closeSync } from 'node:fs'
 import type { Page, Route } from '@playwright/test'
 
 export const SHOTS = 'e2e/screenshots'
+/** 이번 실행에서 찍은 이름 — 워커가 여러 개라 파일로 남긴다 (globalSetup이 비움) */
+export const SHOT_NAMES = `${SHOTS}/.taken`
 export const URL_OK = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'
 
 // 와이어프레임 자리표시 문구와 같은 값으로 채워 비교하기 쉽게 한다
@@ -52,7 +55,14 @@ export async function openEditHome(page: Page, t = track) {
   await page.getByRole('heading', { name: '노래를 다듬어 주세요' }).waitFor()
 }
 
+/** 같은 이름을 두 번 찍으면 실패 — 다른 테스트의 화면을 덮어쓰지 않게 */
 export async function shot(page: Page, name: string) {
+  mkdirSync(SHOT_NAMES, { recursive: true })
+  try {
+    closeSync(openSync(`${SHOT_NAMES}/${name}`, 'wx'))
+  } catch {
+    throw new Error(`스크린샷 이름 ${name}을(를) 이번 실행에서 이미 찍었어요`)
+  }
   await page.evaluate(() => document.fonts.ready)
   await page.screenshot({ path: `${SHOTS}/${name}.png`, fullPage: true })
 }

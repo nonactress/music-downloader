@@ -2,6 +2,8 @@ import { defineConfig } from '@playwright/test'
 
 export default defineConfig({
   testDir: './e2e',
+  // 스크린샷 이름 중복 검사 기록을 비운다
+  globalSetup: './e2e/globalSetup.ts',
   use: {
     baseURL: 'http://localhost:5173',
     viewport: { width: 1440, height: 960 },
