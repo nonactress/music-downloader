@@ -184,6 +184,14 @@ a:hover { color: var(--c-primary-hover); }
 .file-card__play { height: var(--h-btn); padding: 0 22px; border-radius: 14px; font-size: 20px; }
 .done__save { width: 100%; height: var(--h-cta-xl); border-radius: 20px; font-size: 28px; }
 .done__help { font-size: 20px; font-weight: 600; }
+/* 윈도우 프로그램 저장 뒤 (결정 71) — 와이어프레임 없음, 큰 버튼 아래 한 줄 */
+.done__saved {
+  width: 100%; padding: 18px 22px; border-radius: 16px; background: var(--c-primary-soft);
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px;
+}
+.done__saved-text { margin: 0; flex: 999 1 320px; font-size: 22px; line-height: 1.5; overflow-wrap: anywhere; }
+.done__reveal { flex: 1 0 auto; height: var(--h-btn); padding: 0 24px; border-radius: 14px; font-size: 20px; }
+.done__error { width: 100%; }
 .done__more { width: 100%; display: flex; flex-wrap: wrap; gap: 12px; }
 .done__more > * { flex: 1 1 240px; height: var(--h-btn-lg); border-radius: 16px; font-size: 21px; }
 

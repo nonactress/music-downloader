@@ -94,6 +94,10 @@ function silentWavUrl(): string {
   return silentUrl
 }
 
+const MOCK_DESKTOP = import.meta.env.VITE_MOCK_DESKTOP === '1'
+/** 다운로드 폴더에 저장한 이름들 — 같은 이름이 있으면 (2), (3) … (CONTRACT 7-3) */
+const savedNames = new Set<string>()
+
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 /** 목 계정 — 아이디 grandma, 비밀번호 123456 (실제 규칙처럼 6자 이상, 결정 61) */
@@ -143,9 +147,11 @@ export const mockApi: Api = {
 
   async me() {
     await wait(100)
+    // 윈도우 프로그램 화면 보기: `npm run dev:mock-desktop` (CONTRACT 7-2, 로그인 없음)
+    if (MOCK_DESKTOP) return { user: { loginId: 'me' }, desktop: true }
     const loginId = mockSession()
     if (!loginId) throw new ApiError({ code: 'UNAUTHORIZED', message: '로그인이 필요해요. 다시 로그인해 주세요.' }, 401)
-    return { user: { loginId } }
+    return { user: { loginId }, desktop: false }
   },
 
   async createTrack(url) {
@@ -196,5 +202,18 @@ export const mockApi: Api = {
     const n = Math.ceil(track.durationSec * pointsPerSecond)
     const peaks = Array.from({ length: n }, (_, i) => 0.15 + 0.7 * Math.abs(Math.sin(i / 9) * Math.cos(i / 31)))
     return { trackId, durationSec: track.durationSec, pointsPerSecond, peaks }
+  },
+
+  async saveExport() {
+    await wait(400)
+    const base = `내 노래_${mmdd(new Date())}`
+    let fileName = `${base}.mp3`
+    for (let n = 2; savedNames.has(fileName); n++) fileName = `${base} (${n}).mp3`
+    savedNames.add(fileName)
+    return { fileName, savedId: nextId('s') }
+  },
+
+  async revealSaved() {
+    await wait(100)
   },
 }

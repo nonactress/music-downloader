@@ -4,6 +4,7 @@ import { useAuthStore } from './store/authStore'
 import { useFlowStore, type Screen } from './store/flowStore'
 import { ImportPage } from './pages/ImportPage'
 import { LoginPage } from './pages/LoginPage'
+import { RestartPage } from './pages/RestartPage'
 import { LoadingPage } from './pages/LoadingPage'
 import { DonePage } from './pages/DonePage'
 import { EditPage } from './pages/EditPage'
@@ -29,7 +30,9 @@ export function App() {
 
   useEffect(() => {
     if (auth === 'checking') return
-    document.title = `${auth === 'out' ? '로그인' : TITLES[screen]} — 쉬운 음악 만들기`
+    document.title = auth === 'restart'
+      ? '쉬운 음악 만들기'
+      : `${auth === 'out' ? '로그인' : TITLES[screen]} — 쉬운 음악 만들기`
     window.scrollTo(0, 0)
   }, [screen, auth])
 
@@ -38,7 +41,7 @@ export function App() {
 
   return (
     <>
-      {auth === 'out' ? <LoginPage /> : <CurrentScreen screen={screen} />}
+      {auth === 'out' ? <LoginPage /> : auth === 'restart' ? <RestartPage /> : <CurrentScreen screen={screen} />}
       <HelpDialog />
     </>
   )

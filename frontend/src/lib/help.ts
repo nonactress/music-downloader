@@ -7,7 +7,7 @@ export interface HelpText {
   note?: string
 }
 
-export type HelpKey = 'login' | 'import' | 'progress' | 'edit' | 'trim' | 'speed' | 'done' | 'findSaved'
+export type HelpKey = 'login' | 'import' | 'progress' | 'edit' | 'trim' | 'speed' | 'done' | 'findSaved' | 'findSavedDesktop'
 
 export const HELP: Record<HelpKey, HelpText> = {
   login: {
@@ -69,7 +69,7 @@ export const HELP: Record<HelpKey, HelpText> = {
   done: {
     title: '저장하는 방법',
     steps: [
-      '[내 컴퓨터에 저장하기]를 누르면 노래 파일이 컴퓨터에 저장돼요.',
+      '[내 컴퓨터에 저장하기]를 누르면 노래 파일이 컴퓨터에 저장돼요. (윈도우 프로그램에서는 다운로드 폴더에 바로 저장되고, [저장한 곳 열기]로 그 폴더를 열 수 있어요.)',
       '[들어보기]로 저장하기 전에 들어 볼 수 있어요.',
       '다시 고치고 싶으면 [다시 고치러 가기]를 누르세요.',
     ],
@@ -80,6 +80,15 @@ export const HELP: Record<HelpKey, HelpText> = {
     steps: [
       '저장한 노래는 컴퓨터의 **다운로드** 폴더에 있어요.',
       '크롬이나 엣지에서는 키보드의 **Ctrl** 키와 **J** 키를 함께 누르면 받은 파일 목록이 보여요. (맥은 **⌘** 키와 **Option** 키와 **L** 키)',
+      '파일 이름은 "내 노래_월일.mp3"예요. 예: 내 노래_1011.mp3',
+    ],
+  },
+  /** 윈도우 프로그램 (7단계) */
+  findSavedDesktop: {
+    title: '저장한 노래 찾기',
+    steps: [
+      '저장한 노래는 컴퓨터의 **다운로드** 폴더에 있어요.',
+      '[저장한 곳 열기]를 누르면 노래 파일이 있는 폴더가 열리고, 그 파일이 파랗게 표시돼요.',
       '파일 이름은 "내 노래_월일.mp3"예요. 예: 내 노래_1011.mp3',
     ],
   },

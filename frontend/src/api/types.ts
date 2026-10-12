@@ -1,4 +1,4 @@
-// docs/CONTRACT.md v1.6 그대로. 필드 이름 · 상태값을 바꾸지 말 것.
+// docs/CONTRACT.md v1.7 그대로. 필드 이름 · 상태값을 바꾸지 말 것.
 
 export type JobStatus = 'queued' | 'running' | 'done' | 'failed'
 export type JobKind = 'extract' | 'export'
@@ -19,6 +19,7 @@ export type ErrorCode =
   | 'UNAUTHORIZED'
   | 'LOGIN_FAILED'
   | 'LOGIN_LOCKED'
+  | 'SAVE_FAILED'
 
 export interface ApiErrorBody {
   code: ErrorCode | string
@@ -104,4 +105,15 @@ export interface AuthUser {
 
 export interface AuthResponse {
   user: AuthUser
+}
+
+/** CONTRACT 5-4 · 7-2 GET /auth/me — desktop은 v1.7부터 (예전 서버는 없을 수 있음) */
+export interface MeResponse extends AuthResponse {
+  desktop?: boolean
+}
+
+/** CONTRACT 7-3 POST /exports/{id}/save (데스크톱만) */
+export interface SaveExportResponse {
+  fileName: string
+  savedId: string
 }
