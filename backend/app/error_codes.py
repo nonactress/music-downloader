@@ -17,6 +17,7 @@ MESSAGES = {
     "UNAUTHORIZED": "로그인이 필요해요. 다시 로그인해 주세요.",
     "LOGIN_FAILED": "아이디나 비밀번호가 맞지 않아요. 다시 확인해 주세요.",
     "LOGIN_LOCKED": "여러 번 틀려서 잠시 막혔어요. 15분 뒤에 다시 해 주세요.",
+    "SAVE_FAILED": "컴퓨터에 저장하지 못했어요. 다시 눌러 주세요.",
 }
 
 STATUS = {
@@ -30,6 +31,7 @@ STATUS = {
     "UNAUTHORIZED": 401,
     "LOGIN_FAILED": 401,
     "LOGIN_LOCKED": 429,
+    "SAVE_FAILED": 500,
 }
 
 

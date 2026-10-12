@@ -91,6 +91,8 @@ def create_app(api_docs: bool | None = None, desktop: bool | None = None) -> Fas
     app.include_router(tracks.router, prefix=prefix, dependencies=login_required)
     app.include_router(jobs.router, prefix=prefix, dependencies=login_required)
     app.include_router(exports.router, prefix=prefix, dependencies=login_required)
+    if is_desktop:  # 저장 · 저장한 곳 열기 (CONTRACT 7-3 · 7-4) — 서버 모드에는 없음(404)
+        app.include_router(desktop_routes.api_router, prefix=prefix, dependencies=login_required)
     app.get(f"{prefix}/health")(health)
     if is_desktop:
         app.middleware("http")(desktop_routes.check_host)

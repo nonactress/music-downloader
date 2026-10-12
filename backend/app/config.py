@@ -25,6 +25,8 @@ DESKTOP_PORT = int(os.environ.get("DESKTOP_PORT", "47821"))
 DESKTOP_KEY = os.environ.get("DESKTOP_KEY", "")  # 실행기가 실행할 때마다 무작위로 넣는다 (결정 69)
 # 화면 파일(vite build 결과). 데스크톱에서 FastAPI가 `/`로 제공
 FRONTEND_DIST = Path(os.environ.get("FRONTEND_DIST") or Path(__file__).resolve().parents[2] / "frontend" / "dist")
+# 저장 위치 (결정 71). 비워 두면 윈도우 "다운로드" 알려진 폴더 / 그 밖은 ~/Downloads
+DOWNLOADS_DIR = os.environ.get("EASYMUSIC_DOWNLOADS", "")
 DESKTOP_EXTRACT_WORKERS = 2
 DESKTOP_EXPORT_WORKERS = 1
 
