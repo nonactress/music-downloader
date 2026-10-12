@@ -53,13 +53,21 @@ def fetch(name: str, spec: dict, out: Path, cache: Path) -> None:
     print(f"확인 · 풀기 끝: {name} {spec['version']} ({got[:12]}…)")
 
 
+def safe_console() -> None:
+    """윈도우 CI 콘솔(cp1252)은 한글을 못 찍는다 → 못 찍는 글자는 \\uXXXX로 (멈추지 않게)."""
+    for stream in (sys.stdout, sys.stderr):
+        if stream is not None and hasattr(stream, "reconfigure"):
+            stream.reconfigure(errors="backslashreplace")
+
+
 def main(argv=None) -> int:
+    safe_console()
     p = argparse.ArgumentParser()
     p.add_argument("--out", type=Path, default=Path("build/tools"))
     p.add_argument("--cache", type=Path, default=Path("build/downloads"))
     p.add_argument("--only", nargs="*", help="이 도구만 (시험용)")
     args = p.parse_args(argv)
-    tools = {k: v for k, v in json.loads((HERE / "tools.json").read_text()).items() if not k.startswith("_")}
+    tools = {k: v for k, v in json.loads((HERE / "tools.json").read_text(encoding="utf-8")).items() if not k.startswith("_")}
     args.out.mkdir(parents=True, exist_ok=True)
     notes = []
     for name, spec in tools.items():

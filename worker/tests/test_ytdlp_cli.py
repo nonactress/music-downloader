@@ -53,7 +53,7 @@ FAKE = textwrap.dedent('''\
 def fake(tmp_path, monkeypatch):
     exe = tmp_path / "bin" / "yt-dlp"
     exe.parent.mkdir()
-    exe.write_text(FAKE.format(python=sys.executable))
+    exe.write_text(FAKE.format(python=sys.executable), encoding="utf-8")
     exe.chmod(exe.stat().st_mode | stat.S_IEXEC)
     log = tmp_path / "calls.log"
     monkeypatch.setattr(config, "YTDLP_BIN", str(exe))
@@ -64,7 +64,7 @@ def fake(tmp_path, monkeypatch):
     monkeypatch.setenv("FAKE_MODE", "ok")
 
     def calls():
-        return [json.loads(l) for l in log.read_text().splitlines()] if log.exists() else []
+        return [json.loads(l) for l in log.read_text(encoding="utf-8").splitlines()] if log.exists() else []
     return calls
 
 

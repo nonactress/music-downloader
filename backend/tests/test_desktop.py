@@ -17,9 +17,9 @@ KEY = "launch-key-123"
 def dist(tmp_path):
     d = tmp_path / "dist"
     (d / "assets").mkdir(parents=True)
-    (d / "index.html").write_text("<!doctype html><title>쉬운 음악 만들기</title>")
-    (d / "assets" / "app.js").write_text("console.log(1)")
-    (tmp_path / "secret.txt").write_text("outside")
+    (d / "index.html").write_text("<!doctype html><title>쉬운 음악 만들기</title>", encoding="utf-8")
+    (d / "assets" / "app.js").write_text("console.log(1)", encoding="utf-8")
+    (tmp_path / "secret.txt").write_text("outside", encoding="utf-8")
     return d
 
 
@@ -165,10 +165,10 @@ def file_store(monkeypatch):
 def test_file_store_survives_restart_and_keeps_expiry(file_store):
     job = store.create_job("extract", owner="me")
     path = config.META_DIR / f"job__{job['jobId']}.json"
-    expires = json.loads(path.read_text())["expiresAt"]
+    expires = json.loads(path.read_text(encoding="utf-8"))["expiresAt"]
     assert expires == pytest.approx(time.time() + config.FILE_TTL_SEC, abs=5)
     store.update_job(job["jobId"], status="running", progress=30)
-    assert json.loads(path.read_text())["expiresAt"] == expires           # KEEPTTL
+    assert json.loads(path.read_text(encoding="utf-8"))["expiresAt"] == expires           # KEEPTTL
     assert store.get_job(job["jobId"])["progress"] == 30                    # 파일에서 다시 읽힘
 
 
@@ -192,7 +192,7 @@ def test_expired_records_disappear(file_store, monkeypatch):
     monkeypatch.setattr(store.time, "time", lambda: real_time() + config.FILE_TTL_SEC + 1)
     assert store.get_job(job["jobId"]) is None
     other = config.META_DIR / "job__j_gone.json"
-    other.write_text(json.dumps({"expiresAt": 0, "value": {}}))
+    other.write_text(json.dumps({"expiresAt": 0, "value": {}}), encoding="utf-8")
     assert store.purge_expired() >= 1 and not other.exists()
 
 

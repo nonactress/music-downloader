@@ -103,7 +103,7 @@ def write_peaks(path: Path, track_id: str, duration: float, peaks: list[float]) 
         "peaks": peaks,
     }
     tmp = path.with_suffix(".tmp")
-    tmp.write_text(json.dumps(data, separators=(",", ":")))
+    tmp.write_text(json.dumps(data, separators=(",", ":")), encoding="utf-8")
     tmp.replace(path)
 
 
