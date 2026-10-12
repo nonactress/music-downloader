@@ -2,13 +2,25 @@
 import os
 from pathlib import Path
 
+
+def env_flag(name: str, default: bool = False) -> bool:
+    """"1" · "true" · "yes"(대소문자 무관)면 True."""
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    return value.strip().lower() in ("1", "true", "yes")
+
+
 REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
 # 기본값은 실행 위치와 상관없이 backend/data (API · worker가 같은 곳을 보게). Docker는 /data
 DATA_DIR = Path(os.environ.get("DATA_DIR") or Path(__file__).resolve().parents[1] / "data")
 # 로그인 계정 (결정 55). 24시간 정리 대상 아님. Docker: /accounts/users.json
 ACCOUNTS_FILE = Path(os.environ.get("ACCOUNTS_FILE") or Path(__file__).resolve().parents[1] / "accounts" / "users.json")
+# API 자동 문서(/docs · /redoc · /openapi.json). 기본 끔, 개발할 때만 true (결정 62)
+API_DOCS = env_flag("API_DOCS")
+
 # 로그인 세션 (결정 56 · 58)
-COOKIE_SECURE = os.environ.get("COOKIE_SECURE", "false").strip().lower() in ("1", "true", "yes")
+COOKIE_SECURE = env_flag("COOKIE_SECURE")
 SESSION_TTL_SEC = 30 * 24 * 3600
 LOGIN_FAIL_WINDOW_SEC = 15 * 60
 LOGIN_FAIL_LIMIT_ID = 5
