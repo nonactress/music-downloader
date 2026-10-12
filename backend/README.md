@@ -27,12 +27,12 @@ worker는 `backend/app`의 `config` · `store` · `ffmpeg_builder` · `error_cod
 
 ## Docker로 실행
 
-> (아직 실기 확인 전 — Docker 있는 PC 필요)
+> 실기 확인: 2026-10-12 리드 PC(colima 4 CPU · 6GB)에서 4개 서비스 모두 뜨고 실제 유튜브 추출 → 렌더 → 다운로드까지 통과. 이미지 worker 1.14GB · api 297MB · web 76MB.
 
 서버에 올릴 때는 아래 "서버 1대 배포 점검 목록"을 먼저 본다.
 
 ```bash
-docker compose up --build        # 레포 루트에서. api :8000, worker(+beat), redis :6379
+docker compose up --build        # 레포 루트에서. 사용자는 web(:8080)으로 접속, api · redis는 127.0.0.1에만
 ```
 
 ## 로컬 실행 (Docker 없이, macOS)
@@ -142,7 +142,7 @@ cd backend && ../.venv/bin/pytest        # backend/tests + worker/tests
 |---|---|---|
 | CPU | **4 vCPU** (최소 2) | worker `--concurrency=2` = 추출 · 저장 2개 동시. 렌더링은 ffmpeg 한 개(거의 한 코어), 소리 크기 측정은 곡마다 최대 4개 동시. 최악 저장(20분 × 20곡 + 잇기 + 소리 크기) **176초**(M2 Pro, B10) — 서버 CPU는 2~3배 느릴 수 있음 → `EXPORT_TIMEOUT_SEC=900` |
 | 메모리 | **4GB** (최소 2GB) | 렌더링 ffmpeg 최대 **64MB**(B10), 20분 곡 추출(변환 + 파형) 최대 **약 150MB**, celery 프로세스 하나 약 30~100MB, redis · nginx 작음 |
-| 디스크 | **40GB 이상** + 사용량 알림 | 이미지 약 1.5GB. 20분 곡 하나 = mp3 약 **29MB**(4분 곡 약 6MB). 최악 저장 1건 = 원곡 576MB + 결과 575MB = **1.15GB**. 모두 24시간 뒤 삭제 → "하루 동안 쌓이는 양"만큼 필요 |
+| 디스크 | **40GB 이상** + 사용량 알림 | 이미지 약 1.5GB(실측 worker 1.14GB + api 297MB + web 76MB). 20분 곡 하나 = mp3 약 **29MB**(4분 곡 약 6MB). 최악 저장 1건 = 원곡 576MB + 결과 575MB = **1.15GB**. 모두 24시간 뒤 삭제 → "하루 동안 쌓이는 양"만큼 필요 |
 
 - 디스크 남용 방지: `POST /tracks`는 IP당 **하루(지난 24시간) 100곡**까지(`DAILY_TRACK_LIMIT`, 결정 52). 한 사람이 쌓을 수 있는 원곡은 최대 약 2.9GB(20분 곡 100개)이고 24시간 뒤 삭제된다. 그래도 많은 사람이 동시에 쓰면 쌓이므로 디스크 사용량 알림은 걸어 둔다.
 
