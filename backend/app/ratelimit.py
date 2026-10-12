@@ -45,3 +45,9 @@ def client_ip(request: Request) -> str:
 def limit_per_ip(request: Request) -> None:
     if store.hit_rate_limit(request.url.path, client_ip(request), config.RATE_LIMIT_PER_MINUTE):
         raise ApiError("RATE_LIMITED")
+
+
+def take_daily_track(request: Request) -> None:
+    """POST /tracks: IP당 하루(24시간 창) 노래 수 한도 (결정 52). 받아들일 때만 센다."""
+    if not store.take_daily_track(client_ip(request), config.DAILY_TRACK_LIMIT):
+        raise ApiError("RATE_LIMITED", "daily track limit")
