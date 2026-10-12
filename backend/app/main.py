@@ -1,5 +1,5 @@
 """FastAPI 앱 (PLAN 8장, CONTRACT 2장 · 5장)."""
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, Request
 
 from . import errors, sessions
 from .routers import auth, exports, jobs, tracks
@@ -7,9 +7,11 @@ from .routers import auth, exports, jobs, tracks
 app = FastAPI(title="쉬운 음악 만들기 API")
 errors.install(app)
 app.include_router(auth.router)
-app.include_router(tracks.router)
-app.include_router(jobs.router)
-app.include_router(exports.router)
+# /health · /auth/login · /auth/logout 말고는 모두 로그인 필요 (결정 57). 라우터 단위로 걸어서 빠뜨릴 수 없게
+_login_required = [Depends(auth.current_user)]
+app.include_router(tracks.router, dependencies=_login_required)
+app.include_router(jobs.router, dependencies=_login_required)
+app.include_router(exports.router, dependencies=_login_required)
 
 
 @app.middleware("http")

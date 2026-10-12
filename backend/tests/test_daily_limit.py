@@ -3,14 +3,15 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app import config, store
-from app.main import app
+from app.main import app  # noqa: F401
+from tests.conftest import login_client
 
 URL = {"url": "https://youtu.be/dQw4w9WgXcQ"}
 NGINX = "172.18.0.5"
 
 
 def _client(peer="203.0.113.7"):
-    return TestClient(app, client=(peer, 50000), raise_server_exceptions=False)
+    return login_client(peer)
 
 
 @pytest.fixture(autouse=True)

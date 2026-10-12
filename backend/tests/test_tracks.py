@@ -1,6 +1,7 @@
 import pytest
 
 from app import queue, store
+from tests.conftest import OWNER
 from app.errors import ApiError
 from app.youtube import normalize_url
 
@@ -66,7 +67,7 @@ def test_post_tracks_creates_job(client, sent):
     job = store.get_job(body["jobId"])
     assert job == {
         "jobId": body["jobId"], "kind": "extract", "status": "queued", "progress": 0,
-        "etaSeconds": None, "track": None, "result": None, "error": None,
+        "etaSeconds": None, "track": None, "result": None, "error": None, "owner": OWNER,
     }
     assert store.get_track(body["trackId"])["url"] == CANON
 
@@ -111,7 +112,7 @@ from app import config  # noqa: E402
 
 def _track(status="done", audio=b"0123456789" * 50, peaks=True):
     job = store.create_job("extract")
-    tid = store.create_track(job["jobId"], CANON)["trackId"]
+    tid = store.create_track(job["jobId"], CANON, owner=OWNER)["trackId"]
     store.update_track(tid, status=status, durationSec=0.13)
     config.TRACKS_DIR.mkdir(parents=True, exist_ok=True)
     if audio is not None:
