@@ -193,6 +193,16 @@ def verify(login_id: str, password: str) -> str | None:
 
 # ---- 관리 명령 ----------------------------------------------------------------
 
+def _end_sessions(login_id: str) -> str:
+    """그 사람의 로그인 세션을 모두 끊는다. Redis에 못 붙으면 알리기만 (계정 변경은 이미 끝남)."""
+    try:
+        from . import sessions
+        n = sessions.delete_all_for(login_id)
+        return f" (로그인 {n}곳 끊음)"
+    except Exception as e:  # noqa: BLE001 — redis 없이도 계정 관리는 돼야 함
+        return f" (⚠ 로그인 세션을 끊지 못함: {e.__class__.__name__} — api의 Redis가 켜져 있는지 확인)"
+
+
 def _ask_password() -> str:
     first = getpass.getpass("새 비밀번호: ")
     second = getpass.getpass("한 번 더: ")
@@ -212,9 +222,11 @@ def main(argv: list[str] | None = None) -> int:
         if args.cmd == "add":
             print(f"만들었습니다: {add_user(args.login_id, _ask_password())}")
         elif args.cmd == "passwd":
-            print(f"비밀번호를 바꿨습니다: {set_password(args.login_id, _ask_password())}")
+            login_id = set_password(args.login_id, _ask_password())
+            print(f"비밀번호를 바꿨습니다: {login_id}{_end_sessions(login_id)}")
         elif args.cmd == "remove":
-            print(f"지웠습니다: {remove_user(args.login_id)}")
+            login_id = remove_user(args.login_id)
+            print(f"지웠습니다: {login_id}{_end_sessions(login_id)}")
         else:
             users = list_users()
             for u in users:
