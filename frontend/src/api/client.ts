@@ -4,6 +4,7 @@ import type {
   CreateTrackResponse,
   EditJson,
   Job,
+  MeResponse,
   Peaks,
 } from './types'
 import { ApiError, FALLBACK_ERROR } from './errors'
@@ -41,7 +42,7 @@ export interface Api {
   /** CONTRACT 5장 — 쿠키 em_session은 브라우저가 알아서 주고받는다 */
   login(loginId: string, password: string): Promise<AuthResponse>
   logout(): Promise<void>
-  me(): Promise<AuthResponse>
+  me(): Promise<MeResponse>
   createTrack(url: string): Promise<CreateTrackResponse>
   getJob(jobId: string): Promise<Job>
   createExport(edit: EditJson): Promise<CreateExportResponse>
