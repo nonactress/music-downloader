@@ -138,7 +138,9 @@ def build_command(
     """subprocess.run에 그대로 넘길 인자 리스트 (shell=True 금지)."""
     if len(input_paths) != len(tracks):
         raise ValueError("입력 파일 수와 노래 수가 다릅니다")
-    args = ["ffmpeg", "-hide_banner", "-nostdin", "-y"]
+    from . import config  # 데스크톱은 함께 넣은 ffmpeg.exe 경로 (결정 73)
+
+    args = [config.FFMPEG_BIN, "-hide_banner", "-nostdin", "-y"]
     for p in input_paths:
         args += ["-i", str(p)]
     args += [

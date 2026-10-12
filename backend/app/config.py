@@ -27,6 +27,12 @@ DESKTOP_KEY = os.environ.get("DESKTOP_KEY", "")  # 실행기가 실행할 때마
 FRONTEND_DIST = Path(os.environ.get("FRONTEND_DIST") or Path(__file__).resolve().parents[2] / "frontend" / "dist")
 # 저장 위치 (결정 71). 비워 두면 윈도우 "다운로드" 알려진 폴더 / 그 밖은 ~/Downloads
 DOWNLOADS_DIR = os.environ.get("EASYMUSIC_DOWNLOADS", "")
+# 도구 경로 (결정 73). 비워 두면: yt-dlp는 파이썬 라이브러리(서버 모드), ffmpeg · ffprobe는 PATH
+YTDLP_BIN = os.environ.get("EASYMUSIC_YTDLP", "")      # 설정하면 yt-dlp 실행 파일을 subprocess로
+DENO_BIN = os.environ.get("EASYMUSIC_DENO", "")        # yt-dlp --js-runtimes deno:<경로>
+FFMPEG_BIN = os.environ.get("EASYMUSIC_FFMPEG", "ffmpeg")
+FFPROBE_BIN = os.environ.get("EASYMUSIC_FFPROBE", "ffprobe")
+YTDLP_AUTO_UPDATE = env_flag("EASYMUSIC_YTDLP_UPDATE")  # 켤 때 뒤에서 yt-dlp -U (실행기가 켬)
 DESKTOP_EXTRACT_WORKERS = 2
 DESKTOP_EXPORT_WORKERS = 1
 

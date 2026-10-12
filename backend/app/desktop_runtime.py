@@ -99,10 +99,19 @@ def start() -> None:
     if failed:
         log.info("지난번에 끝나지 않은 작업 %d개를 실패로 표시", failed)
     cleanup_once()
+    _start_ytdlp_update()
     _stop.clear()
     if _cleanup_thread is None or not _cleanup_thread.is_alive():
         _cleanup_thread = threading.Thread(target=_cleanup_loop, name="easymusic-cleanup", daemon=True)
         _cleanup_thread.start()
+
+
+def _start_ytdlp_update() -> None:
+    """켤 때 뒤에서 yt-dlp -U (결정 73). 끝날 때까지 추출은 ytdlp_cli.ready를 기다린다."""
+    from worker import ytdlp_cli
+    if ytdlp_cli.enabled() and config.YTDLP_AUTO_UPDATE:
+        ytdlp_cli.ready.clear()  # 스레드가 뜨기 전에 들어온 추출도 기다리게
+        threading.Thread(target=ytdlp_cli.self_update, name="easymusic-ytdlp-update", daemon=True).start()
 
 
 def stop() -> None:
