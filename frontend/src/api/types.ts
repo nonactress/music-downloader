@@ -111,3 +111,9 @@ export interface AuthResponse {
 export interface MeResponse extends AuthResponse {
   desktop?: boolean
 }
+
+/** CONTRACT 7-3 POST /exports/{id}/save (데스크톱만) */
+export interface SaveExportResponse {
+  fileName: string
+  savedId: string
+}

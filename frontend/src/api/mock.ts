@@ -95,6 +95,8 @@ function silentWavUrl(): string {
 }
 
 const MOCK_DESKTOP = import.meta.env.VITE_MOCK_DESKTOP === '1'
+/** 다운로드 폴더에 저장한 이름들 — 같은 이름이 있으면 (2), (3) … (CONTRACT 7-3) */
+const savedNames = new Set<string>()
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
@@ -200,5 +202,18 @@ export const mockApi: Api = {
     const n = Math.ceil(track.durationSec * pointsPerSecond)
     const peaks = Array.from({ length: n }, (_, i) => 0.15 + 0.7 * Math.abs(Math.sin(i / 9) * Math.cos(i / 31)))
     return { trackId, durationSec: track.durationSec, pointsPerSecond, peaks }
+  },
+
+  async saveExport() {
+    await wait(400)
+    const base = `내 노래_${mmdd(new Date())}`
+    let fileName = `${base}.mp3`
+    for (let n = 2; savedNames.has(fileName); n++) fileName = `${base} (${n}).mp3`
+    savedNames.add(fileName)
+    return { fileName, savedId: nextId('s') }
+  },
+
+  async revealSaved() {
+    await wait(100)
   },
 }
