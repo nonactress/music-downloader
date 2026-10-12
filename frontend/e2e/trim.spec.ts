@@ -49,7 +49,7 @@ test('④ 누르는 즉시 반영 → [완료, 목록으로] → ③ 알림 · �
   await expect(card(page).getByText('방금 바뀜')).toBeVisible()
   await expect(card(page)).toHaveClass(/song-card--changed/)
   await expect(page.getByText('전체 길이 3분 10초')).toBeVisible()
-  await shot(page, '03-edit-home')
+  await shot(page, '03-edit-home-after-trim')
 
   await page.getByRole('button', { name: '되돌리기', exact: true }).click()
   await expect(card(page).getByText('3분 45초 · 보통 빠르기')).toBeVisible()
