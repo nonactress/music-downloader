@@ -35,14 +35,15 @@ tmux kill-session -t music-team   # 종료
 
 ## 진행 상황
 
-PLAN.md 13장 개발 순서 1~5단계 기능 완료 (2026-10-12). 남은 것: 배포 대상 · 공개 범위 결정과 `docker compose up` 실기 확인 — [이슈 #1](https://github.com/nonactress/music-downloader/issues/1)
+PLAN.md 13장 개발 순서 1~6단계 완료 (2026-10-12, 6단계 = 접속 제한 로그인). `docker compose up` 실기 확인 끝. 남은 것: 배포 대상 결정 — [이슈 #1](https://github.com/nonactress/music-downloader/issues/1)
 
 ## 실행
 
 Docker로 (사용자는 http://localhost:8080 하나로 접속):
 
 ```bash
-docker compose up --build      # web(nginx) · api · worker · redis — 아직 실기 확인 전 (이슈 #1)
+docker compose up --build      # web(nginx) · api · worker · redis — 2026-10-12 실기 확인 (colima)
+docker compose exec api python -m app.accounts add <아이디>   # 처음 한 번: 로그인 계정 만들기
 ```
 
 Docker 없이 개발할 때: 백엔드는 [backend/README.md](backend/README.md) "로컬 실행", 프론트는
