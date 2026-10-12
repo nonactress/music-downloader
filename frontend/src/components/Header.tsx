@@ -1,3 +1,5 @@
+import { HELP_FOR_SCREEN } from '../lib/help'
+import { useFlowStore } from '../store/flowStore'
 import { useUiStore } from '../store/uiStore'
 import { CheckIcon } from './Icons'
 
@@ -9,6 +11,8 @@ const STEPS = ['노래 가져오기', '노래 다듬기', '저장하기'] as con
 export function Header({ current }: { current: StepNumber }) {
   const bigText = useUiStore((s) => s.bigText)
   const toggleBigText = useUiStore((s) => s.toggleBigText)
+  const openHelp = useUiStore((s) => s.openHelp)
+  const screen = useFlowStore((s) => s.screen)
   return (
     <header className="header">
       <div className="header__logo">쉬운 음악 만들기</div>
@@ -31,7 +35,10 @@ export function Header({ current }: { current: StepNumber }) {
         <button type="button" className="header__btn" aria-pressed={bigText} onClick={toggleBigText}>
           {bigText ? '가 글자 원래대로' : '가+ 글자 크게'}
         </button>
-        <button type="button" className="header__btn">도움말</button>
+        {/* 결정 47: 지금 화면의 도움말 */}
+        <button type="button" className="header__btn" aria-haspopup="dialog" onClick={() => openHelp(HELP_FOR_SCREEN[screen])}>
+          도움말
+        </button>
       </div>
     </header>
   )

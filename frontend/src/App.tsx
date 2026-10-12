@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
-import { useFlowStore } from './store/flowStore'
+import { HelpDialog } from './components/HelpDialog'
+import { useFlowStore, type Screen } from './store/flowStore'
 import { ImportPage } from './pages/ImportPage'
 import { LoadingPage } from './pages/LoadingPage'
 import { DonePage } from './pages/DonePage'
@@ -28,6 +29,15 @@ export function App() {
     window.scrollTo(0, 0)
   }, [screen])
 
+  return (
+    <>
+      <CurrentScreen screen={screen} />
+      <HelpDialog />
+    </>
+  )
+}
+
+function CurrentScreen({ screen }: { screen: Screen }) {
   if (screen === 'loading') return <LoadingPage />
   if (screen === 'edit') return <EditPage />
   if (screen === 'speedAll') return <SpeedAllPage />
