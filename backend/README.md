@@ -80,6 +80,7 @@ curl -s localhost:8000/jobs/<jobId>
 | `MAX_DURATION_SEC` | `1200` | 이보다 긴 영상은 `TOO_LONG` (20분) |
 | `TZ` | `Asia/Seoul` | 결과 파일 이름 `내 노래_MMDD.mp3`의 날짜 기준 |
 | `TRUSTED_PROXY_IPS` | `127.0.0.1/32,::1/128,172.16.0.0/12,192.168.0.0/16` | 이 주소(쉼표로 구분한 IP · 대역)에서 온 요청만 `X-Forwarded-For` 맨 오른쪽 값을 사용자 IP로 믿음. 그 밖은 접속 IP (결정 50) |
+| `DAILY_TRACK_LIMIT` | `100` | IP당 지난 24시간 동안 `POST /tracks`로 받을 수 있는 노래 수. 넘으면 429 (결정 52). `0`이면 끔 |
 | `RATE_LIMIT_PER_MINUTE` | `10` | IP · 경로별 분당 `POST /tracks`, `POST /exports` 수 (넘으면 429) |
 | `EXTRACT_TIMEOUT_SEC` | `300` | 추출 작업 제한 시간 (넘으면 `TIMEOUT`) |
 | `EXPORT_TIMEOUT_SEC` | `900` | 렌더링 작업 제한 시간 (넘으면 `TIMEOUT`). 최악 경우(20분 × 20곡) 실측 176초 |
@@ -110,7 +111,7 @@ cd backend && ../.venv/bin/pytest        # backend/tests + worker/tests
 | 메모리 | **4GB** (최소 2GB) | 렌더링 ffmpeg 최대 **64MB**(B10), 20분 곡 추출(변환 + 파형) 최대 **약 150MB**, celery 프로세스 하나 약 30~100MB, redis · nginx 작음 |
 | 디스크 | **40GB 이상** + 사용량 알림 | 이미지 약 1.5GB. 20분 곡 하나 = mp3 약 **29MB**(4분 곡 약 6MB). 최악 저장 1건 = 원곡 576MB + 결과 575MB = **1.15GB**. 모두 24시간 뒤 삭제 → "하루 동안 쌓이는 양"만큼 필요 |
 
-- ⚠ 디스크 위험: 요청 수 제한은 IP당 분당 10번이라, 한 사람이 20분 영상을 계속 불러오면 이론상 시간당 약 17GB까지 쌓일 수 있다 (24시간 뒤 삭제). 공개 범위가 넓으면 디스크 사용량 알림을 꼭 걸고, 필요하면 IP당 하루 한도를 추가한다(지금은 없음).
+- 디스크 남용 방지: `POST /tracks`는 IP당 **하루(지난 24시간) 100곡**까지(`DAILY_TRACK_LIMIT`, 결정 52). 한 사람이 쌓을 수 있는 원곡은 최대 약 2.9GB(20분 곡 100개)이고 24시간 뒤 삭제된다. 그래도 많은 사람이 동시에 쓰면 쌓이므로 디스크 사용량 알림은 걸어 둔다.
 
 ### 배포 전 확인
 
@@ -155,5 +156,5 @@ cd backend && ../.venv/bin/pytest        # backend/tests + worker/tests
 | 유튜브만 | `youtube.py` — 허용 호스트 5개, 영상 ID를 뽑아 `https://www.youtube.com/watch?v=<ID>`로 다시 만들어 yt-dlp에 전달 |
 | 재생목록 · 긴 영상 | `/playlist` 거절, `noplaylist`, 20분 초과 `TOO_LONG` |
 | 명령어 주입 | subprocess는 인자 리스트로만 (`test_safety.py`가 `shell=True` · `os.system` · 문자열 명령을 찾으면 실패) |
-| 과부하 | IP당 요청 수 제한(프록시는 `TRUSTED_PROXY_IPS`만 믿음 — `X-Forwarded-For` 위조 방지), 작업 타임아웃 |
+| 과부하 | IP당 요청 수 제한(분당 10번, 노래 불러오기는 하루 100곡 — 프록시는 `TRUSTED_PROXY_IPS`만 믿음 — `X-Forwarded-For` 위조 방지), 작업 타임아웃 |
 | 저장 공간 | beat가 30분마다 24시간 지난 파일 삭제, Redis 기록은 TTL 24시간 |

@@ -15,6 +15,8 @@ TIMEZONE = os.environ.get("TZ", "Asia/Seoul") or "Asia/Seoul"
 TRUSTED_PROXY_IPS = os.environ.get(
     "TRUSTED_PROXY_IPS", "127.0.0.1/32,::1/128,172.16.0.0/12,192.168.0.0/16"
 )
+# IP당 지난 24시간 동안 POST /tracks로 받을 수 있는 노래 수 (결정 52). 0이면 끔
+DAILY_TRACK_LIMIT = int(os.environ.get("DAILY_TRACK_LIMIT", "100"))
 RATE_LIMIT_PER_MINUTE = int(os.environ.get("RATE_LIMIT_PER_MINUTE", "10"))
 EXTRACT_TIMEOUT_SEC = int(os.environ.get("EXTRACT_TIMEOUT_SEC", "300"))
 # 20분 × 20곡 + 잇기 + 소리 크기 = 이 Mac 176초 (B10). 느린 서버 · 작업 2개 동시 여유로 약 5배

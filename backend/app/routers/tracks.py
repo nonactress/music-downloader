@@ -1,12 +1,12 @@
 """POST /tracks, GET /tracks/{id}/audio, GET /tracks/{id}/peaks (CONTRACT 2-1, 2-3, 2-4)."""
 from pathlib import Path
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import FileResponse, Response
 
 from .. import config, queue, store
 from ..errors import ApiError
-from ..ratelimit import limit_per_ip
+from ..ratelimit import limit_per_ip, take_daily_track
 from ..schemas import TrackRequest
 from ..youtube import normalize_url
 
@@ -14,8 +14,9 @@ router = APIRouter()
 
 
 @router.post("/tracks", status_code=202, dependencies=[Depends(limit_per_ip)])
-def create_track(body: TrackRequest) -> dict:
+def create_track(body: TrackRequest, request: Request) -> dict:
     url = normalize_url(body.url)
+    take_daily_track(request)  # 주소가 맞을 때만 하루 한도에서 하나 씀
     job = store.create_job("extract")
     track = store.create_track(job["jobId"], url)
     queue.send(queue.EXTRACT_TASK, job["jobId"], track["trackId"])
