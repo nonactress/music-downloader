@@ -23,24 +23,23 @@ async function expectNoHorizontalScroll(page: Page, where: string) {
 test('누르면 1.25배 · "가 글자 원래대로", 새로고침해도 유지, 다시 누르면 원래대로', async ({ page }) => {
   await page.goto('/')
   await expect(bigBtn(page)).toHaveText('가+ 글자 크게')
-  const h1 = page.getByRole('heading', { name: '유튜브 주소를 넣어주세요' })
-  const before = (await h1.boundingBox())!.height
+  // 글꼴과 상관없이 높이가 정해진 헤더 버튼(60px)으로 배율을 잰다
+  const height = async () => (await bigBtn(page).boundingBox())!.height
+  expectAbout(await height(), 60)
 
   await bigBtn(page).click()
   await expect(bigBtn(page)).toHaveText('가 글자 원래대로')
   await expect(bigBtn(page)).toHaveAttribute('aria-pressed', 'true')
-  expectAbout((await h1.boundingBox())!.height, before * 1.25)
-  const btnHeight = (await bigBtn(page).boundingBox())!.height
-  expect(btnHeight).toBeGreaterThanOrEqual(75)
+  expectAbout(await height(), 75)
 
   await page.reload()
   await expect(bigBtn(page)).toHaveText('가 글자 원래대로')
-  expectAbout((await h1.boundingBox())!.height, before * 1.25)
+  expectAbout(await height(), 75)
 
   await bigBtn(page).click()
   await expect(bigBtn(page)).toHaveText('가+ 글자 크게')
   await expect(bigBtn(page)).toHaveAttribute('aria-pressed', 'false')
-  expectAbout((await h1.boundingBox())!.height, before)
+  expectAbout(await height(), 60)
   await page.reload()
   await expect(bigBtn(page)).toHaveText('가+ 글자 크게')
 })
