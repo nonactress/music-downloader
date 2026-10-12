@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import json
+import time
 import uuid
 from typing import Any
 
@@ -146,3 +147,27 @@ def hit_rate_limit(scope: str, ip: str, limit: int, window_sec: int = 60) -> boo
     if count == 1:
         r.expire(key, window_sec)
     return count > limit
+
+
+def take_daily_track(ip: str, limit: int, window_sec: int = 24 * 3600) -> bool:
+    """IP당 window 안에 받은 노래 수가 limit 미만이면 하나를 기록하고 True (결정 52).
+
+    지난 24시간을 미끄러지는 창으로 센다 (정렬 집합에 받은 시각을 남김).
+    먼저 넣고 세어서, 동시에 들어온 요청이 한도를 넘기면 자기 것을 빼고 거절한다.
+    """
+    if limit <= 0:
+        return True
+    r = get_redis()
+    key = f"daily:tracks:{ip}"
+    now = time.time()
+    member = f"{now:.6f}:{uuid.uuid4().hex[:8]}"
+    pipe = r.pipeline()
+    pipe.zremrangebyscore(key, "-inf", now - window_sec)
+    pipe.zadd(key, {member: now})
+    pipe.zcard(key)
+    pipe.expire(key, window_sec)
+    count = pipe.execute()[2]
+    if count > limit:
+        r.zrem(key, member)
+        return False
+    return True

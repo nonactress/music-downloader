@@ -14,4 +14,5 @@ RUN useradd --create-home --uid 1000 appuser && mkdir -p /data && chown appuser 
 USER appuser
 
 EXPOSE 8000
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# 프록시 헤더는 app/ratelimit.py가 TRUSTED_PROXY_IPS 기준으로 직접 판단 (결정 50)
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--no-proxy-headers"]

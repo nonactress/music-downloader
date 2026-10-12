@@ -15,6 +15,11 @@ COPY --from=denoland/deno:bin-2.4.5 /deno /usr/local/bin/deno
 COPY worker/requirements.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
+# yt-dlp 갱신 (결정 51): PyPI의 yt-dlp 정보가 바뀌면(새 버전) 이 줄부터 캐시가 깨져서
+# `docker compose build worker`만 해도 최신 yt-dlp를 받는다. 새 버전이 없으면 캐시 그대로.
+ADD https://pypi.org/pypi/yt-dlp/json /tmp/yt-dlp-release.json
+RUN pip install --no-cache-dir --upgrade "yt-dlp[default]" && python -m yt_dlp --version
+
 COPY backend/app /srv/app
 COPY worker /srv/worker
 
