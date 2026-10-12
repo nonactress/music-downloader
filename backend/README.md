@@ -1,6 +1,6 @@
 # backend · worker
 
-쉬운 음악 만들기의 API 서버(FastAPI)와 작업자(Celery). 기능 · 계약은 [`docs/PLAN.md`](../docs/PLAN.md), [`docs/CONTRACT.md`](../docs/CONTRACT.md)가 기준이다.
+쉬운 음악 만들기의 API 서버(FastAPI)와 작업자(Celery), 그리고 윈도우 프로그램(데스크톱 모드). 기능 · 계약은 [`docs/PLAN.md`](../docs/PLAN.md), [`docs/CONTRACT.md`](../docs/CONTRACT.md)가 기준이다.
 
 ```
 backend/app/
@@ -17,10 +17,19 @@ backend/app/
   ratelimit.py       IP당 요청 수 제한 → 429
   queue.py           Celery 작업 이름 · 보내기 (API는 worker 코드를 import하지 않음)
   config.py          환경 변수
+  desktop_runtime.py 데스크톱 모드 스레드 작업자 · 정리 (Celery 대신)
+  downloads.py       데스크톱: 다운로드 폴더 저장 · 저장한 곳 열기
+  routers/desktop.py 데스크톱: /desktop/start · Host 검사 · 저장 API
 worker/
-  celery_app.py      Celery 앱 + beat 일정
+  celery_app.py      Celery 앱 + beat 일정 (서버 모드만)
+  celery_tasks.py    Celery 작업 등록 (서버 모드만 — 데스크톱 묶음에는 Celery가 없음)
+  ytdlp_cli.py       yt-dlp 실행 파일로 받기 · 자동 갱신 (데스크톱)
   media.py           ffmpeg · ffprobe 호출 (변환, 길이, 파형)
   tasks/             extract.py (추출) · export.py (렌더링) · cleanup.py (24시간 정리)
+desktop/               윈도우 프로그램 (7단계)
+  launcher.py        실행기: 두 번째 실행 막기 · 포트 · uvicorn 스레드 · pywebview 창
+  selftest.py        --selftest (CI)
+  easymusic.spec     PyInstaller · installer.iss Inno Setup · tools.json 도구 버전 · fetch_tools.py
 ```
 
 worker는 `backend/app`의 `config` · `store` · `ffmpeg_builder` · `error_codes`를 함께 쓴다 (그래서 Dockerfile build context가 레포 루트).
@@ -107,6 +116,57 @@ cd backend && ../.venv/bin/pytest        # backend/tests + worker/tests
 - yt-dlp는 가짜로 바꿔서 테스트한다 → 유튜브 접속 없이 돈다. 실제 유튜브 확인은 위 "빠른 확인"으로.
 - 느린 측정 테스트는 기본 실행에서 빠진다. 최악 경우 렌더링(20분 × 20곡, 약 3분):
   `../.venv/bin/pytest -m slow -s tests/test_render_worst_case.py` (작게: `WORST_TRACKS=4 WORST_MINUTES=5` 앞에 붙이기)
+
+## 윈도우 프로그램 (데스크톱 모드) — 7단계, 결정 64~76
+
+배포는 서버가 아니라 각자 설치하는 윈도우 프로그램이다. 같은 백엔드 코드를 `DESKTOP=true`로 켠다.
+
+| | 서버 모드 (Docker) | 데스크톱 모드 (윈도우 프로그램) |
+|---|---|---|
+| 작업자 | Celery + Redis | 같은 프로세스 스레드 (추출 2 · 내보내기 1, `app/desktop_runtime.py`) |
+| 기록 | Redis | `%LOCALAPPDATA%\EasyMusic\data\meta\*.json` (껐다 켜도 남음, 하던 작업은 failed INTERNAL) |
+| 주소 | nginx `/api/*` → api | `http://127.0.0.1:47821` 하나: 화면 `/`, API `/api/*` |
+| 로그인 | 계정 · 쿠키 세션 | 없음. 실행할 때마다 열쇠 → `/desktop/start` → 쿠키, `Host` 검사 |
+| yt-dlp | 파이썬 라이브러리 | `yt-dlp.exe` subprocess, 켤 때 `-U`로 자동 갱신 (`worker/ytdlp_cli.py`) |
+| 저장 | 브라우저 다운로드 | 다운로드 폴더에 바로 (`POST /api/exports/{id}/save`) |
+| 요청 수 제한 | 있음 | 없음 |
+
+### 개발 (Mac에서 창 띄우기)
+
+```bash
+.venv/bin/pip install -r desktop/requirements.txt           # pywebview · pyinstaller 추가
+(cd frontend && npm ci && npm run build)                    # 화면 파일 (frontend/dist)
+.venv/bin/python -m desktop                                 # Cocoa 창. 데이터: ~/Library/Application Support/EasyMusic
+.venv/bin/python -m desktop --selftest                      # 창 없이 도구 · 서버 · 변환 확인
+```
+
+- 창 없이 서버만: `DESKTOP=true DESKTOP_KEY=<열쇠> DESKTOP_PORT=47821 FRONTEND_DIST=<dist> PYTHONPATH=backend:. .venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 47821` → 브라우저로 `http://127.0.0.1:47821/desktop/start?key=<열쇠>`
+- 개발 중에는 yt-dlp를 venv의 실행 파일로, ffmpeg를 PATH에서 쓴다 (`desktop/paths.py`).
+- 로그: `<데이터 폴더>/logs/app.log` (창 프로그램이라 콘솔이 없음).
+
+### 빌드 (CI만 — 윈도우 기기가 없음)
+
+`.github/workflows/desktop.yml` (windows-latest): 프론트 빌드 → 시험 → `python desktop/fetch_tools.py`(도구 3개, **SHA-256 확인**) → WebView2 설치기(**Microsoft 서명 확인**) → `pyinstaller desktop/easymusic.spec` → `iscc desktop/installer.iss` → **무인 설치 → `EasyMusic.exe --selftest` → 지우기**. `v*` 태그면 GitHub Release에 `EasyMusicSetup-<버전>.exe`.
+
+- `--selftest`: 도구 3개 버전, 서버 켜서 `/api/health` · 열쇠 세션 · 화면, 2초 오디오 ffmpeg 변환. 결과는 `--selftest-out` 파일(창 프로그램은 콘솔이 없음). 실제 유튜브 받기는 하지 않음 (CI는 데이터센터 IP).
+- 묶음에는 Celery · kombu · billiard를 넣지 않는다 (데스크톱은 안 씀 + Celery는 모듈을 이름으로 불러와서 묶으면 켜지다 죽음 — Mac 묶음 selftest로 실제 확인함).
+- 우리 코드는 모듈 맨 위에서 `fcntl` 같은 유닉스 전용 모듈을 import하면 안 된다 (윈도우에서 켜지지 않음, `desktop/tests`가 검사).
+
+### 도구 올리기
+
+`desktop/tools.json`의 버전 · 주소 · `sha256`을 함께 바꾼다. 해시는 배포처가 낸 값으로 (yt-dlp `SHA2-256SUMS`, deno `.sha256sum`, ffmpeg gyan.dev `.sha256`). yt-dlp는 사용자 컴퓨터에서 켤 때마다 스스로 최신화되므로, 설치 파일의 yt-dlp는 "처음 쓸 것"일 뿐이다 (설치 파일이 더 새 것을 가져오면 `bin\`의 것을 덮어씀).
+
+### 데스크톱 환경 변수 (실행기가 정함)
+
+| 이름 | 뜻 |
+|---|---|
+| `DESKTOP` | `true`면 데스크톱 모드 |
+| `DESKTOP_PORT` · `DESKTOP_KEY` | 고정 포트(47821~47830) · 실행할 때마다 새 열쇠 (결정 68 · 69) |
+| `EASYMUSIC_HOME` | 데이터 폴더 (기본 `%LOCALAPPDATA%\EasyMusic`) |
+| `FRONTEND_DIST` | 화면 파일 폴더 |
+| `EASYMUSIC_YTDLP` · `EASYMUSIC_YTDLP_UPDATE` | yt-dlp 실행 파일 경로(있으면 subprocess로) · 켤 때 `-U` |
+| `EASYMUSIC_FFMPEG` · `EASYMUSIC_FFPROBE` · `EASYMUSIC_DENO` | 함께 넣은 도구 경로 |
+| `EASYMUSIC_DOWNLOADS` | 저장 폴더 (비우면 윈도우 "다운로드" 알려진 폴더) |
 
 ## 계정 관리 (관리자) — 결정 54 · 55
 

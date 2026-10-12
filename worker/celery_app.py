@@ -9,7 +9,7 @@ from app import config, queue
 celery_app = Celery(
     "worker",
     broker=config.REDIS_URL,
-    include=["worker.tasks.extract", "worker.tasks.export", "worker.tasks.cleanup"],
+    include=["worker.celery_tasks"],
 )
 celery_app.conf.update(
     task_acks_late=True,

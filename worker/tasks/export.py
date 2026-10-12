@@ -14,13 +14,12 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from celery.exceptions import SoftTimeLimitExceeded
 
-from app import config, queue, store
+from app import config, store
 from app.error_codes import error_body
 from app.ffmpeg_builder import TrackEdit, build_command, normalize_gain_db, total_duration
 from worker import media
-from worker.celery_app import celery_app
+from worker.compat import SoftTimeLimitExceeded
 
 log = logging.getLogger(__name__)
 
@@ -164,12 +163,3 @@ def _fail(job_id: str, export_id: str, code: str, detail: str) -> None:
     store.update_export(export_id, status="failed")
     store.fail_job(job_id, error_body(code))
     config.export_path(export_id).unlink(missing_ok=True)
-
-
-@celery_app.task(
-    name=queue.EXPORT_TASK,
-    soft_time_limit=config.EXPORT_TIMEOUT_SEC,
-    time_limit=config.EXPORT_TIMEOUT_SEC + 30,
-)
-def render_export(job_id: str, export_id: str, edit: dict) -> None:
-    run_export(job_id, export_id, edit)

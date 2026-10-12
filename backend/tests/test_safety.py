@@ -67,11 +67,11 @@ def test_no_shell_true_anywhere():
 
 
 def test_task_timeouts_set():
-    from worker.tasks import export, extract
-    assert extract.extract_track.soft_time_limit == config.EXTRACT_TIMEOUT_SEC
-    assert export.render_export.soft_time_limit == config.EXPORT_TIMEOUT_SEC
-    assert extract.extract_track.time_limit > extract.extract_track.soft_time_limit
-    assert export.render_export.time_limit > export.render_export.soft_time_limit
+    from worker import celery_tasks
+    assert celery_tasks.extract_track.soft_time_limit == config.EXTRACT_TIMEOUT_SEC
+    assert celery_tasks.render_export.soft_time_limit == config.EXPORT_TIMEOUT_SEC
+    assert celery_tasks.extract_track.time_limit > celery_tasks.extract_track.soft_time_limit
+    assert celery_tasks.render_export.time_limit > celery_tasks.render_export.soft_time_limit
 
 
 def test_yt_dlp_only_lower_bound_pinned():

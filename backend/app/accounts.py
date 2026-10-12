@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import argparse
 import base64
-import fcntl
 import getpass
 import hashlib
 import hmac
@@ -113,15 +112,25 @@ def _write(data: dict) -> None:
 
 @contextmanager
 def _locked():
-    """관리 명령끼리 동시에 고쳐도 서로 덮어쓰지 않게."""
+    """관리 명령끼리 동시에 고쳐도 서로 덮어쓰지 않게.
+    fcntl은 윈도우에 없으므로 쓰는 곳에서만 불러온다 (윈도우 프로그램도 이 모듈을 import함)."""
     path = _path()
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path.with_name(path.name + ".lock"), "w") as lock:
-        fcntl.flock(lock, fcntl.LOCK_EX)
+        if os.name == "nt":
+            import msvcrt
+            msvcrt.locking(lock.fileno(), msvcrt.LK_LOCK, 1)
+        else:
+            import fcntl
+            fcntl.flock(lock, fcntl.LOCK_EX)
         try:
             yield
         finally:
-            fcntl.flock(lock, fcntl.LOCK_UN)
+            if os.name == "nt":
+                lock.seek(0)
+                msvcrt.locking(lock.fileno(), msvcrt.LK_UNLCK, 1)
+            else:
+                fcntl.flock(lock, fcntl.LOCK_UN)
 
 
 # ---- 계정 ---------------------------------------------------------------------

@@ -10,12 +10,11 @@ import time
 from pathlib import Path
 
 import yt_dlp
-from celery.exceptions import SoftTimeLimitExceeded
 
-from app import config, queue, store
+from app import config, store
 from app.error_codes import error_body
 from worker import media, ytdlp_cli
-from worker.celery_app import celery_app
+from worker.compat import SoftTimeLimitExceeded
 
 log = logging.getLogger(__name__)
 
@@ -221,12 +220,3 @@ def _fail(job_id: str, track_id: str, code: str, detail: str) -> None:
     store.fail_job(job_id, error_body(code))
     for p in (config.track_audio_path(track_id), config.track_peaks_path(track_id)):
         p.unlink(missing_ok=True)
-
-
-@celery_app.task(
-    name=queue.EXTRACT_TASK,
-    soft_time_limit=config.EXTRACT_TIMEOUT_SEC,
-    time_limit=config.EXTRACT_TIMEOUT_SEC + 30,
-)
-def extract_track(job_id: str, track_id: str) -> None:
-    run_extract(job_id, track_id)
