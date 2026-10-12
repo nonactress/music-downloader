@@ -279,7 +279,27 @@ a:hover { color: var(--c-primary-hover); }
   position: absolute; top: 0; bottom: 0; z-index: 1; background: rgba(31, 79, 184, 0.16);
   border-left: 6px solid var(--c-primary); border-right: 6px solid var(--c-primary);
 }
-.wave__handle { position: absolute; z-index: 2; top: 56px; width: 36px; height: 48px; border-radius: 8px; background: var(--c-primary); }
+/* 손잡이 잡는 범위(결정 63): 폭 64px · 파형 높이 전체, 남길 부분 쪽으로 52px.
+   보이는 손잡이(36×48)는 경계 한가운데 그대로 (와이어프레임) */
+
+.wave__grip {
+  position: absolute; z-index: 2; top: 0; bottom: 0; width: 64px;
+  cursor: ew-resize; user-select: none; touch-action: none;
+}
+.wave__grip--start { margin-left: -12px; }
+.wave__grip--end { margin-left: -52px; }
+.wave__grip:focus-visible { outline: none; }
+.wave__grip:focus-visible .wave__handle { outline: 4px solid #f2b705; outline-offset: 2px; }
+.wave__handle { position: absolute; top: 56px; width: 36px; height: 48px; border-radius: 8px; background: var(--c-primary); }
+.wave__grip--start .wave__handle { left: -6px; }
+.wave__grip--end .wave__handle { left: 34px; }
+/* 끄는 동안 손잡이 위에 시간 */
+.wave__time {
+  position: absolute; z-index: 4; top: 8px; transform: translateX(-50%);
+  padding: 2px 12px; border-radius: 8px; background: var(--c-text); color: #fff;
+  font-size: 20px; font-weight: 700; line-height: 1.5; pointer-events: none; white-space: nowrap;
+}
+.trim__drag-hint { margin: -12px 0 0; font-size: 20px; color: var(--c-text-sub); }
 
 .trim__steppers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
 .stepper { padding: 20px; border-radius: 16px; background: var(--c-bg); display: flex; flex-direction: column; gap: 14px; align-items: center; }
