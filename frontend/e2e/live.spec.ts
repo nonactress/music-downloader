@@ -147,3 +147,63 @@ test('실제 백엔드: 1곡 남기고 빼기 → [빼기] 비활성', async ({ 
   await expect(page.getByRole('article')).toHaveCount(1)
   await expect(page.getByRole('article', { name: '1번 노래' }).getByRole('button', { name: '빼기' })).toBeDisabled()
 })
+
+test('실제 백엔드 전체 흐름: ① → ② → ③ 붙이기 · 자르기 · 빠르기 · 잇기 → 저장 → ⑦ → 새로고침 복원', async ({ page }) => {
+  test.setTimeout(420_000)
+  // ① → ② : 불러오는 중에 새로고침해도 같은 작업을 이어서 ③까지
+  await page.goto('/')
+  await page.getByLabel('유튜브 주소').fill(VIDEO)
+  await page.getByRole('button', { name: '노래 불러오기' }).click()
+  await expect(page.getByText(/% 완료/)).toBeVisible()
+  await page.reload()
+  await expect(page.getByRole('heading', { name: '노래를 다듬어 주세요' })).toBeVisible({ timeout: 120_000 })
+
+  // ③ 붙이기 → 2번 앞 5초 자르기(미리듣기는 nginx/Vite 프록시로 Range 206) → 1번 빠르기 1.25배
+  await appendSameVideo(page)
+  await page.getByRole('article', { name: '2번 노래' }).getByRole('button', { name: '잘라내기' }).click()
+  await page.getByRole('group', { name: '시작' }).getByRole('button', { name: '+5초' }).click()
+  const audio = page.waitForResponse((r) => /\/api\/tracks\/[^/]+\/audio/.test(r.url()))
+  await page.getByRole('button', { name: '남긴 부분 들어보기' }).click()
+  expect([200, 206]).toContain((await audio).status())
+  await page.getByRole('button', { name: '멈추기' }).click()
+  await page.getByRole('button', { name: '완료, 목록으로' }).click()
+
+  await page.getByRole('article', { name: '1번 노래' }).getByRole('button', { name: '빠르기', exact: true }).click()
+  await page.getByRole('group', { name: '빠르기 고르기' }).getByRole('button', { name: /빠르게/ }).click()
+  await page.getByRole('button', { name: '완료, 목록으로' }).click()
+  await expect(page.getByRole('checkbox', { name: /노래 사이 부드럽게 잇기/ })).toBeChecked()
+
+  // 15.2048 + 14.006 − 2 = 27.2108초
+  const expected = 19.006 / 1.25 + (19.006 - 5) - 2
+  await expect(page.getByText('전체 길이 27초')).toBeVisible()
+
+  // ③에서 새로고침 → 그대로 + 되돌리기 기록도
+  await page.reload()
+  await expect(page.getByRole('article', { name: '1번 노래' }).getByText('15초 · 빠르게 1.25배')).toBeVisible()
+  await expect(page.getByRole('article', { name: '2번 노래' }).getByText('14초 (앞 잘라냄) · 보통 빠르기')).toBeVisible()
+  await expect(page.getByRole('status')).toHaveText(/1번 노래 빠르기를 빠르게\(1.25배\)로 바꿨어요/)
+
+  // 저장 → 만드는 중에 새로고침 → 같은 작업 → ⑦
+  const posted = page.waitForRequest((r) => r.url().endsWith('/api/exports') && r.method() === 'POST')
+  await page.getByRole('button', { name: '다 됐어요, 저장하기' }).click()
+  const body = (await posted).postDataJSON()
+  expect(body).toMatchObject({ crossfade: 2, normalize: true })
+  expect(body.tracks.map((t: { speed: number; start: number }) => [t.speed, t.start])).toEqual([[1.25, 0], [1, 5]])
+  await expect(page.getByRole('heading', { name: '노래를 만들고 있어요' })).toBeVisible()
+  await page.reload()
+  await expect(page.getByRole('heading', { name: '노래가 완성됐어요!' })).toBeVisible({ timeout: 120_000 })
+  await expect(page.getByText(/노래 2곡 · 27초 · /)).toBeVisible()
+
+  const href = await page.getByRole('link', { name: '내 컴퓨터에 저장하기' }).getAttribute('href')
+  const res = await page.request.get(href!)
+  expect(res.status()).toBe(200)
+  const sec = probeDuration(await res.body())
+  expect(sec).toBeGreaterThan(expected - 0.3)
+  expect(sec).toBeLessThan(expected + 0.3)
+  await page.screenshot({ path: 'e2e/screenshots/live-flow-done.png', fullPage: true })
+
+  // ⑦에서 새로고침 → ③ (결정 48). [새 노래 만들기] 뒤 ①은 resume.spec에서 확인
+  await page.reload()
+  await expect(page.getByRole('heading', { name: '노래를 다듬어 주세요' })).toBeVisible()
+  await expect(page.getByRole('article')).toHaveCount(2)
+})

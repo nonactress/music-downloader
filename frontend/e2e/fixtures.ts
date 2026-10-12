@@ -64,6 +64,8 @@ export async function shot(page: Page, name: string) {
     throw new Error(`스크린샷 이름 ${name}을(를) 이번 실행에서 이미 찍었어요`)
   }
   await page.evaluate(() => document.fonts.ready)
+  // 마우스가 올라간 버튼 색(hover) 없이 찍기
+  await page.mouse.move(0, 0)
   await page.screenshot({ path: `${SHOTS}/${name}.png`, fullPage: true })
 }
 
