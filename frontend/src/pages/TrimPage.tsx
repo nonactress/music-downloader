@@ -8,7 +8,7 @@ import { TimeStepper } from '../components/TimeStepper'
 import { Waveform } from '../components/Waveform'
 import { formatKoreanDuration } from '../lib/format'
 import { usePreview } from '../lib/preview'
-import { moveTrim, trimLimits } from '../lib/trim'
+import { moveTrim, nudgeEdge, placeEdge, trimLimits } from '../lib/trim'
 import type { EditTrack } from '../api/types'
 import { isSameEdit, trackDuration, trimState, useEditStore } from '../store/editStore'
 import { useFlowStore } from '../store/flowStore'
@@ -42,6 +42,14 @@ export function TrimPage() {
     const current = useEditStore.getState().edit
     const tracks = current.tracks.map((t, i) => (i === index ? next : t))
     useEditStore.getState().setLive({ ...current, tracks })
+  }
+
+  /** 끄는 중에는 이벤트가 렌더보다 빠를 수 있어 store의 지금 값에서 계산 */
+  function updateFromStore(change: (t: EditTrack) => EditTrack) {
+    const now = useEditStore.getState().edit.tracks[index]
+    if (!now) return
+    const next = change(now)
+    if (next.start !== now.start || next.end !== now.end) update(next)
   }
 
   function finish() {
@@ -87,7 +95,17 @@ export function TrimPage() {
             남길 부분의 <b>시작</b>과 <b>끝</b>을 정해주세요. 파란 부분만 남고 회색 부분은 잘려나가요.
           </p>
 
-          <Waveform trackId={track.sourceId} durationSec={info.durationSec} start={track.start} end={track.end} />
+          <Waveform
+            trackId={track.sourceId}
+            durationSec={info.durationSec}
+            start={track.start}
+            end={track.end}
+            onGrab={() => usePreview.getState().stop()}
+            onPlace={(edge, sec) => updateFromStore((t) => placeEdge(t, info.durationSec, edge, sec))}
+            onNudge={(edge, delta) => updateFromStore((t) => nudgeEdge(t, info.durationSec, edge, delta))}
+          />
+          {/* 결정 63 — 끌기는 버튼에 더한 수단 */}
+          <p className="trim__drag-hint">파란 부분 양 끝의 손잡이를 마우스로 끌어서 옮길 수도 있어요.</p>
 
           <div className="trim__steppers">
             <TimeStepper

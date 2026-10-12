@@ -31,3 +31,25 @@ export function moveTrim(t: EditTrack, durationSec: number, move: Move): EditTra
     case 'endUp': return { ...t, end: Math.min(durationSec, t.end + TRIM_STEP) }
   }
 }
+
+/** 손잡이 끌기 · 키보드 (결정 63): 0.1초 단위로 저장 */
+export const DRAG_STEP = 0.1
+export const KEY_STEP = 1
+export const KEY_STEP_BIG = 5
+
+export type Edge = 'start' | 'end'
+
+const roundStep = (sec: number) => Math.round(sec / DRAG_STEP) * DRAG_STEP
+
+/** 손잡이를 sec 위치로 — 0.1초로 맞추고 범위 · 최소 1초(결정 19) 안으로 */
+export function placeEdge(t: EditTrack, durationSec: number, edge: Edge, sec: number): EditTrack {
+  // 원곡 길이는 0.1초로 안 떨어질 수 있다(224.83초) — 맨 끝까지 끌면 원곡 끝 그대로
+  const v = sec >= durationSec - DRAG_STEP / 2 ? durationSec : Number(roundStep(sec).toFixed(1))
+  if (edge === 'start') return { ...t, start: Math.max(0, Math.min(t.end - MIN_KEEP, v)) }
+  return { ...t, end: Math.min(durationSec, Math.max(t.start + MIN_KEEP, v)) }
+}
+
+/** 키보드 ←/→: 지금 값에서 delta초 */
+export function nudgeEdge(t: EditTrack, durationSec: number, edge: Edge, delta: number): EditTrack {
+  return placeEdge(t, durationSec, edge, (edge === 'start' ? t.start : t.end) + delta)
+}
