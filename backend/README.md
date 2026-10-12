@@ -4,7 +4,7 @@
 
 ```
 backend/app/
-  main.py            FastAPI 앱 (라우터 · 에러 핸들러 연결, 로그인 필요 범위)
+  main.py            FastAPI 앱 create_app() (라우터 · 에러 핸들러 연결, 로그인 필요 범위, 문서 켜기/끄기)
   routers/           auth.py (로그인) · tracks.py (POST /tracks, audio, peaks) · jobs.py · exports.py
   accounts.py        로그인 계정 파일 + 관리 명령 `python -m app.accounts` (결정 55)
   sessions.py        로그인 세션 (Redis, 30일) · 틀린 로그인 막기 (결정 56 · 58)
@@ -51,8 +51,8 @@ python3 -m venv .venv                                   # 레포 루트에 만�
 # 1) Redis
 redis-server
 
-# 2) API  → http://localhost:8000/docs
-.venv/bin/uvicorn app.main:app --app-dir backend --reload --port 8000 --no-proxy-headers
+# 2) API  → http://localhost:8000/docs (API_DOCS=true일 때만)
+API_DOCS=true .venv/bin/uvicorn app.main:app --app-dir backend --reload --port 8000 --no-proxy-headers
 
 # 3) 작업자 + beat
 PYTHONPATH=backend:. .venv/bin/celery -A worker.celery_app worker -B \
@@ -87,6 +87,7 @@ curl -s -b /tmp/em.jar localhost:8000/jobs/<jobId>
 | `FILE_TTL_HOURS` | `24` | 파일 · 기록 보관 시간 (지나면 삭제) |
 | `MAX_DURATION_SEC` | `1200` | 이보다 긴 영상은 `TOO_LONG` (20분) |
 | `ACCOUNTS_FILE` | `backend/accounts/users.json` (Docker: `/accounts/users.json`) | 로그인 계정(아이디 + scrypt 해시). 24시간 정리 대상 아님 (결정 55) |
+| `API_DOCS` | `false` | `true`면 API 자동 문서(`/docs` · `/redoc` · `/openapi.json`)를 켬. **개발할 때만** — nginx가 `/api/`를 넘기므로 배포에서 켜면 바깥에서 `/api/docs`로 열림 (결정 62) |
 | `COOKIE_SECURE` | `false` | `true`면 로그인 쿠키에 `Secure` — **HTTPS로 배포하면 반드시 `true`** (결정 56) |
 | `TZ` | `Asia/Seoul` | 결과 파일 이름 `내 노래_MMDD.mp3`의 날짜 기준 |
 | `TRUSTED_PROXY_IPS` | `127.0.0.1/32,::1/128,172.16.0.0/12,192.168.0.0/16` | 이 주소(쉼표로 구분한 IP · 대역)에서 온 요청만 `X-Forwarded-For` 맨 오른쪽 값을 사용자 IP로 믿음. 그 밖은 접속 IP (결정 50) |
@@ -150,6 +151,7 @@ cd backend && ../.venv/bin/pytest        # backend/tests + worker/tests
 - [ ] 바깥에 여는 포트는 `web`(compose `8080:80`) **하나뿐**. `api`(8000) · `redis`(6379)는 `127.0.0.1`에만 묶여 있는지 (`docker compose ps`). 비밀번호 없는 Redis · X-Forwarded-For 위조 방지(B12)
 - [ ] HTTPS: compose에는 TLS가 없다 → 서버 앞단(로드밸런서 · 리버스 프록시)에서 처리. 앞단을 하나 더 두면 그 주소 대역을 `TRUSTED_PROXY_IPS`에 넣어야 하고, 지금 구현은 X-Forwarded-For **한 단계**만 보므로 다시 검토 필요
 - [ ] **계정부터 만들기**: 계정이 하나도 없으면 아무도 로그인할 수 없다 → 위 "계정 관리"의 `add`로 쓸 사람 계정을 만들고 한 번 로그인해 본다
+- [ ] `API_DOCS`는 설정하지 않거나 `false` — `curl -s -o /dev/null -w '%{http_code}' http://<서버>/api/docs` → 404
 - [ ] **HTTPS면 `COOKIE_SECURE=true`** (compose `x-app-env`). HTTP로만 쓰면 `false` 그대로 (true면 HTTP에서 로그인이 유지되지 않음)
 - [ ] 환경 변수(위 표): 보통은 compose 기본값 그대로. `TZ=Asia/Seoul`(파일 이름 날짜), `EXPORT_TIMEOUT_SEC=900`, `MAX_DURATION_SEC=1200`
 - [ ] `docker compose logs worker | grep "yt-dlp "` 로 yt-dlp 버전 확인, 실제 유튜브 주소 하나로 ① → ⑦ 한 번 끝까지
