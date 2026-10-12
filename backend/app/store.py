@@ -1,13 +1,19 @@
-"""Redis 저장소: 작업(job) · 노래(track) · 내보내기(export) 기록.
+"""작업(job) · 노래(track) · 내보내기(export) 기록.
 
-모든 키는 만들 때 24시간 TTL이 걸리고, 갱신해도 TTL은 유지된다 (KEEPTTL).
+서버 모드: Redis. 데스크톱 모드(결정 66): META_DIR의 JSON 파일(기록 하나 = 파일 하나) — 껐다 켜도 남는다.
+모든 기록은 만들 때 24시간 만료가 걸리고, 갱신해도 만료 시각은 그대로다 (KEEPTTL).
 작업 기록은 GET /jobs/{id} 응답 모양(CONTRACT 2-2) 그대로 저장한다.
 """
 from __future__ import annotations
 
 import json
+import os
+import re
+import tempfile
+import threading
 import time
 import uuid
+from pathlib import Path
 from typing import Any
 
 import redis
@@ -34,16 +40,116 @@ def new_id(prefix: str) -> str:
     return f"{prefix}_{uuid.uuid4().hex}"
 
 
+# ---- 데스크톱: 파일 저장소 ---------------------------------------------------
+
+_KEY_RE = re.compile(r"^(job|track|export):[A-Za-z0-9_-]{1,80}$")
+_file_lock = threading.RLock()
+
+
+def _file_path(key: str) -> Path | None:
+    """주소창에서 온 id도 키가 되므로, 모양이 맞을 때만 파일 이름으로 쓴다 (경로 조작 차단)."""
+    if not _KEY_RE.match(key):
+        return None
+    return config.META_DIR / (key.replace(":", "__") + ".json")
+
+
+def _file_read(path: Path) -> dict | None:
+    try:
+        entry = json.loads(path.read_text(encoding="utf-8"))
+    except (FileNotFoundError, ValueError):
+        return None
+    if entry.get("expiresAt", 0) <= time.time():
+        path.unlink(missing_ok=True)
+        return None
+    return entry
+
+
+def _file_write(path: Path, value: dict, expires_at: float) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(prefix=".tmp-", suffix=".json", dir=path.parent)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            json.dump({"expiresAt": expires_at, "value": value}, f, ensure_ascii=False)
+        os.replace(tmp, path)
+    except BaseException:
+        Path(tmp).unlink(missing_ok=True)
+        raise
+
+
+def _file_get(key: str) -> dict | None:
+    path = _file_path(key)
+    if path is None:
+        return None
+    with _file_lock:
+        entry = _file_read(path)
+    return entry["value"] if entry else None
+
+
+def _file_set(key: str, value: dict, keep_expiry: bool) -> None:
+    path = _file_path(key)
+    if path is None:
+        raise ValueError(f"잘못된 키: {key}")
+    with _file_lock:
+        old = _file_read(path) if keep_expiry else None
+        expires_at = old["expiresAt"] if old else time.time() + config.FILE_TTL_SEC
+        _file_write(path, value, expires_at)
+
+
+def purge_expired() -> int:
+    """만료된 기록 파일을 지운다 (데스크톱 정리 스레드)."""
+    removed = 0
+    if not config.META_DIR.is_dir():
+        return 0
+    with _file_lock:
+        for path in config.META_DIR.glob("*.json"):
+            if _file_read(path) is None:
+                path.unlink(missing_ok=True)
+                removed += 1
+    return removed
+
+
+def fail_unfinished() -> int:
+    """프로그램을 다시 켰을 때: 끌 때 하던 작업은 failed INTERNAL (결정 66)."""
+    from .error_codes import error_body
+
+    if not config.META_DIR.is_dir():
+        return 0
+    failed = 0
+    with _file_lock:
+        for path in config.META_DIR.glob("*.json"):
+            entry = _file_read(path)
+            if entry is None or entry["value"].get("status") not in ("queued", "running"):
+                continue
+            value = entry["value"]
+            value["status"] = "failed"
+            if path.name.startswith("job__"):
+                value["etaSeconds"] = None
+                value["error"] = error_body("INTERNAL")
+                failed += 1
+            _file_write(path, value, entry["expiresAt"])
+    return failed
+
+
+# ---- 공통 -------------------------------------------------------------------
+
 def _get(key: str) -> dict | None:
+    if config.DESKTOP:
+        return _file_get(key)
     raw = get_redis().get(key)
     return json.loads(raw) if raw else None
 
 
 def _create(key: str, value: dict) -> None:
+    if config.DESKTOP:
+        _file_set(key, value, keep_expiry=False)
+        return
     get_redis().set(key, json.dumps(value, ensure_ascii=False), ex=config.FILE_TTL_SEC)
 
 
 def _update(key: str, value: dict) -> None:
+    if config.DESKTOP:
+        _file_set(key, value, keep_expiry=True)
+        return
     r = get_redis()
     if r.ttl(key) > 0:
         r.set(key, json.dumps(value, ensure_ascii=False), keepttl=True)

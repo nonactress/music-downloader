@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import math
+import os
 import re
 import subprocess
 from pathlib import Path
@@ -18,6 +19,13 @@ class MediaError(Exception):
     pass
 
 
+def popen_flags() -> dict:
+    """윈도우에서 ffmpeg · yt-dlp 콘솔 창이 깜빡이지 않게 (결정 73). 다른 OS는 없음."""
+    if os.name == "nt":
+        return {"creationflags": subprocess.CREATE_NO_WINDOW}
+    return {}
+
+
 def _run(args: list[str], *, capture_stdout: bool = False) -> subprocess.CompletedProcess:
     try:
         return subprocess.run(
@@ -26,6 +34,7 @@ def _run(args: list[str], *, capture_stdout: bool = False) -> subprocess.Complet
             stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE if capture_stdout else subprocess.DEVNULL,
             stderr=subprocess.PIPE,
+            **popen_flags(),
         )
     except subprocess.CalledProcessError as e:
         tail = (e.stderr or b"")[-500:].decode("utf-8", "replace")

@@ -127,3 +127,18 @@ def test_export_normalize_reaches_target(tmp_path):
     # 목표 -16 LUFS, 단 최대값 -1.5 dBFS를 넘지 않음
     assert peak <= -1.0
     assert lufs == pytest.approx(-16, abs=1.5) or peak == pytest.approx(-1.5, abs=0.6)
+
+
+@needs_ffmpeg
+def test_render_timeout_kills_ffmpeg(tmp_path):
+    """스레드 작업자용 자체 타임아웃: 시간이 지나면 ffmpeg를 끊고 TIMEOUT (진행 출력이 없어도)."""
+    import time as _t
+    job_id, _ = _new_export()
+    # 진행 출력 없이 오래 도는 명령 (무한 입력)
+    cmd = ["ffmpeg", "-hide_banner", "-nostdin", "-y", "-f", "lavfi", "-re", "-i", "sine=duration=60",
+           "-f", "null", "-"]
+    started = _t.monotonic()
+    with pytest.raises(export.ExportError) as e:
+        export._render(job_id, cmd, 60, tmp_path / "x.log", timeout=1.0)
+    assert e.value.code == "TIMEOUT"
+    assert _t.monotonic() - started < 10

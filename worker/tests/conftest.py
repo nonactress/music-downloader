@@ -17,6 +17,7 @@ def fake_redis(monkeypatch, tmp_path):
     monkeypatch.setattr(config, "DATA_DIR", tmp_path)
     monkeypatch.setattr(config, "TRACKS_DIR", tmp_path / "tracks")
     monkeypatch.setattr(config, "EXPORTS_DIR", tmp_path / "exports")
+    monkeypatch.setattr(config, "META_DIR", tmp_path / "meta")
     monkeypatch.setattr(config, "ACCOUNTS_FILE", tmp_path / "accounts" / "users.json")
     yield r
     store.set_redis(None)

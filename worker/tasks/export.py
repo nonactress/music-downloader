@@ -8,6 +8,7 @@ from __future__ import annotations
 import logging
 import os
 import subprocess
+import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
@@ -63,13 +64,27 @@ def _measure_gains(job_id: str, inputs: list, tracks: list[TrackEdit]) -> list[f
     return gains
 
 
-def _render(job_id: str, cmd: list[str], expected: float, log_path, base: int = 0) -> None:
+def _render(job_id: str, cmd: list[str], expected: float, log_path, base: int = 0,
+            timeout: float | None = None) -> None:
+    """ffmpeg 실행 + 진행률. timeout초가 지나면 ffmpeg를 끊고 TIMEOUT
+    (데스크톱 스레드 작업자에는 Celery soft_time_limit이 없으므로 직접 지킨다)."""
     cmd = cmd[:-1] + ["-progress", "pipe:1", "-nostats", "-loglevel", "error"] + cmd[-1:]
+    timeout = config.EXPORT_TIMEOUT_SEC if timeout is None else timeout
     started = time.monotonic()
     last_write = 0.0
+    timed_out = threading.Event()
     with open(log_path, "wb") as err:
         proc = subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
-                                stderr=err, text=True)
+                                stderr=err, text=True, **media.popen_flags())
+
+        def _kill_on_timeout():
+            timed_out.set()
+            if proc.poll() is None:
+                proc.kill()
+
+        watchdog = threading.Timer(timeout, _kill_on_timeout)
+        watchdog.daemon = True
+        watchdog.start()
         try:
             for line in proc.stdout:
                 pos = _parse_out_time(line)
@@ -83,9 +98,12 @@ def _render(job_id: str, cmd: list[str], expected: float, log_path, base: int = 
                 store.update_job(job_id, progress=base + int(fraction * (99 - base)), etaSeconds=eta)
             proc.wait()
         finally:
+            watchdog.cancel()
             if proc.poll() is None:
                 proc.kill()
                 proc.wait()
+    if timed_out.is_set():
+        raise ExportError("TIMEOUT", f"ffmpeg가 {timeout}초를 넘음")
     if proc.returncode != 0:
         tail = log_path.read_bytes()[-500:].decode("utf-8", "replace")
         raise ExportError("EXPORT_FAILED", f"ffmpeg exit {proc.returncode}: {tail}")

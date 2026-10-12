@@ -20,4 +20,8 @@ def get_celery() -> Celery:
 
 
 def send(task_name: str, *args) -> None:
+    if config.DESKTOP:  # 데스크톱: 같은 프로세스 안 스레드 작업자 (결정 66)
+        from . import desktop_runtime
+        desktop_runtime.submit(task_name, *args)
+        return
     get_celery().send_task(task_name, args=list(args))
