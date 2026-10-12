@@ -9,8 +9,20 @@ x-app-env: &app-env
   FILE_TTL_HOURS: "24"             # 24시간 뒤 자동 삭제 (PLAN 12장)
   MAX_DURATION_SEC: "1200"         # 20분 초과 영상 거절
   TZ: Asia/Seoul                   # 결과 파일 이름 "내 노래_MMDD.mp3"
+  EXPORT_TIMEOUT_SEC: "900"        # 20분 × 20곡 최악 176초 기준 여유 (결정 44)
 
 services:
+  # 사용자가 접속하는 곳: 프론트 정적 파일 + /api → api (PLAN 결정 49). Dockerfile · nginx.conf는 frontend 담당
+  web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
   api:
     build:
       context: .
