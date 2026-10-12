@@ -35,7 +35,7 @@ tmux kill-session -t music-team   # 종료
 
 ## 진행 상황
 
-PLAN.md 13장 개발 순서 1~6단계 완료 (2026-10-12, 6단계 = 접속 제한 로그인). `docker compose up` 실기 확인 끝. 남은 것: 배포 대상 결정 — [이슈 #1](https://github.com/nonactress/music-downloader/issues/1)
+PLAN.md 13장 개발 순서 1~6단계 완료 (2026-10-12, 6단계 = 접속 제한 로그인). `docker compose up` 실기 확인 끝. **배포는 윈도우 프로그램으로 결정**([이슈 #1](https://github.com/nonactress/music-downloader/issues/1), PLAN 결정 64~76) → 7단계 진행 중. 설치 파일이 나오면 설치 안내는 `docs/HELP.md` 마지막 장.
 
 ## 실행
 

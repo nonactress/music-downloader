@@ -30,7 +30,7 @@ React + TypeScript (Vite) + Zustand + wavesurfer.js / FastAPI / Celery + Redis /
 | 폴더 | 담당 |
 |---|---|
 | `docs/`, `team/`, `scripts/`, `docker-compose.yml`, `CLAUDE.md` | lead |
-| `backend/`, `worker/` | backend |
+| `backend/`, `worker/`, `desktop/`, `.github/workflows/desktop.yml` | backend |
 | `frontend/` | frontend |
 
 ## 작업 방식
