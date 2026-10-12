@@ -10,6 +10,8 @@ x-app-env: &app-env
   MAX_DURATION_SEC: "1200"         # 20분 초과 영상 거절
   TZ: Asia/Seoul                   # 결과 파일 이름 "내 노래_MMDD.mp3"
   EXPORT_TIMEOUT_SEC: "900"        # 20분 × 20곡 최악 176초 기준 여유 (결정 44)
+  ACCOUNTS_FILE: /accounts/users.json  # 로그인 계정 (결정 55)
+  COOKIE_SECURE: "false"           # HTTPS로 배포하면 "true" (결정 56)
 
 services:
   # 사용자가 접속하는 곳: 프론트 정적 파일 + /api → api (PLAN 결정 49). Dockerfile · nginx.conf는 frontend 담당
@@ -33,6 +35,7 @@ services:
       - "127.0.0.1:8000:8000"
     volumes:
       - media:/data
+      - accounts:/accounts         # 로그인 계정 (결정 55) — 24시간 정리 대상 아님, api만 씀
     depends_on:
       redis:
         condition: service_healthy
@@ -64,3 +67,4 @@ services:
 
 volumes:
   media:
+  accounts:

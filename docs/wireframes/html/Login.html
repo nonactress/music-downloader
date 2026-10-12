@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>로그인</title>
+
+</head>
+<body>
+
+<!-- 6단계 로그인 화면 (PLAN 결정 54~60). 리드가 기존 와이어프레임 스타일 · 규칙(글자 20px↑, 버튼 60px↑)에 맞춰 작성 -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;600;700&amp;display=swap">
+<style>
+body{margin:0}
+button,input{font-family:inherit}
+</style>
+
+<div style="width: 100%; min-height: 960px; background: #F7F7F5; color: #1A1A1A; font-family: 'IBM Plex Sans KR', 'Noto Sans CJK KR', sans-serif; display: flex; flex-direction: column;">
+  <!-- 로그인 화면은 3단계 표시 없음, [가+ 글자 크게] [도움말]만 -->
+  <header style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 40px; background: #FFFFFF; border-bottom: 2px solid #E2E2DE;">
+    <div style="font-size: 26px; font-weight: 700;">쉬운 음악 만들기</div>
+    <div style="display: flex; gap: 10px;">
+      <button style="height: 60px; padding: 0 18px; border: 2px solid #1A1A1A; border-radius: 12px; background: #FFFFFF; font-size: 20px; font-weight: 600;">가+ 글자 크게</button>
+      <button style="height: 60px; padding: 0 18px; border: 2px solid #1A1A1A; border-radius: 12px; background: #FFFFFF; font-size: 20px; font-weight: 600;">도움말</button>
+    </div>
+  </header>
+
+  <main style="width: 100%; max-width: 720px; margin: 0 auto; box-sizing: border-box; padding: 72px 40px; display: flex; flex-direction: column; gap: 28px;">
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <h1 style="margin: 0; font-size: 44px; font-weight: 700;">로그인해 주세요</h1>
+      <p style="margin: 0; font-size: 22px; color: #4A4A48;">아이디와 비밀번호를 넣고 [로그인]을 누르세요.</p>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <label for="login-id" style="font-size: 22px; font-weight: 600;">아이디</label>
+      <input id="login-id" autocomplete="username" style="height: 80px; box-sizing: border-box; padding: 0 22px; border: 3px solid #1A1A1A; border-radius: 16px; background: #FFFFFF; font-size: 24px;">
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <label for="login-pw" style="font-size: 22px; font-weight: 600;">비밀번호</label>
+      <input id="login-pw" type="password" autocomplete="current-password" style="height: 80px; box-sizing: border-box; padding: 0 22px; border: 3px solid #1A1A1A; border-radius: 16px; background: #FFFFFF; font-size: 24px;">
+      <label style="min-height: 60px; display: flex; align-items: center; gap: 14px; font-size: 20px; cursor: pointer;"><input type="checkbox" style="width: 32px; height: 32px; accent-color: #1F4FB8;">비밀번호 보이기</label>
+    </div>
+
+    <!-- 틀렸을 때만 보임: CONTRACT 4장 LOGIN_FAILED / LOGIN_LOCKED 문구 그대로 -->
+    <div role="alert" style="display: flex; align-items: flex-start; gap: 14px; padding: 18px 22px; border-radius: 14px; background: #FDECEA; border: 2px solid #B42318; font-size: 22px; font-weight: 700; line-height: 1.5;">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#B42318" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; margin-top: 2px;"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5M12 16.5v.5"></path></svg>
+      <span>아이디나 비밀번호가 맞지 않아요. 다시 확인해 주세요.</span>
+    </div>
+
+    <a href="Main.html" style="height: 88px; display: flex; align-items: center; justify-content: center; border-radius: 18px; background: #1F4FB8; color: #FFFFFF; font-size: 28px; font-weight: 700; text-decoration: none;">로그인</a>
+
+    <div style="padding: 20px 24px; border-radius: 16px; background: #EAEAE6; font-size: 21px; line-height: 1.6;">아이디와 비밀번호는 <b>관리자에게 받아요</b>. 잊어버렸으면 관리자에게 물어보세요.</div>
+  </main>
+</div>
+
+</body>
+</html>
