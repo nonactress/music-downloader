@@ -10,7 +10,8 @@ RUN pip install --no-cache-dir -r /tmp/requirements.txt
 COPY backend/app /srv/app
 
 # worker와 같은 uid → 공유 볼륨 /data 권한 일치
-RUN useradd --create-home --uid 1000 appuser && mkdir -p /data && chown appuser /data
+# /accounts: 로그인 계정 볼륨 (결정 55) — 볼륨이 처음 만들어질 때 이 소유자를 물려받는다
+RUN useradd --create-home --uid 1000 appuser && mkdir -p /data /accounts && chown appuser /data /accounts
 USER appuser
 
 EXPOSE 8000
