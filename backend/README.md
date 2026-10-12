@@ -48,7 +48,7 @@ python3 -m venv .venv                                   # 레포 루트에 만�
 redis-server
 
 # 2) API  → http://localhost:8000/docs
-.venv/bin/uvicorn app.main:app --app-dir backend --reload --port 8000
+.venv/bin/uvicorn app.main:app --app-dir backend --reload --port 8000 --no-proxy-headers
 
 # 3) 작업자 + beat
 PYTHONPATH=backend:. .venv/bin/celery -A worker.celery_app worker -B \
@@ -77,6 +77,7 @@ curl -s localhost:8000/jobs/<jobId>
 | `FILE_TTL_HOURS` | `24` | 파일 · 기록 보관 시간 (지나면 삭제) |
 | `MAX_DURATION_SEC` | `1200` | 이보다 긴 영상은 `TOO_LONG` (20분) |
 | `TZ` | `Asia/Seoul` | 결과 파일 이름 `내 노래_MMDD.mp3`의 날짜 기준 |
+| `TRUSTED_PROXY_IPS` | `127.0.0.1/32,::1/128,172.16.0.0/12,192.168.0.0/16` | 이 주소(쉼표로 구분한 IP · 대역)에서 온 요청만 `X-Forwarded-For` 맨 오른쪽 값을 사용자 IP로 믿음. 그 밖은 접속 IP (결정 50) |
 | `RATE_LIMIT_PER_MINUTE` | `10` | IP · 경로별 분당 `POST /tracks`, `POST /exports` 수 (넘으면 429) |
 | `EXTRACT_TIMEOUT_SEC` | `300` | 추출 작업 제한 시간 (넘으면 `TIMEOUT`) |
 | `EXPORT_TIMEOUT_SEC` | `900` | 렌더링 작업 제한 시간 (넘으면 `TIMEOUT`). 최악 경우(20분 × 20곡) 실측 176초 |
@@ -100,5 +101,5 @@ cd backend && ../.venv/bin/pytest        # backend/tests + worker/tests
 | 유튜브만 | `youtube.py` — 허용 호스트 5개, 영상 ID를 뽑아 `https://www.youtube.com/watch?v=<ID>`로 다시 만들어 yt-dlp에 전달 |
 | 재생목록 · 긴 영상 | `/playlist` 거절, `noplaylist`, 20분 초과 `TOO_LONG` |
 | 명령어 주입 | subprocess는 인자 리스트로만 (`test_safety.py`가 `shell=True` · `os.system` · 문자열 명령을 찾으면 실패) |
-| 과부하 | IP당 요청 수 제한, 작업 타임아웃 |
+| 과부하 | IP당 요청 수 제한(프록시는 `TRUSTED_PROXY_IPS`만 믿음 — `X-Forwarded-For` 위조 방지), 작업 타임아웃 |
 | 저장 공간 | beat가 30분마다 24시간 지난 파일 삭제, Redis 기록은 TTL 24시간 |
