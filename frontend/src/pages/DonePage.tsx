@@ -1,10 +1,13 @@
 // ⑦ 저장 완료 — docs/wireframes/html/Done.html
 import { useEffect, useRef, useState, type MouseEvent } from 'react'
 import { api } from '../api/client'
+import { ApiError, toUserMessage } from '../api/errors'
+import type { SaveExportResponse } from '../api/types'
+import { ErrorBox } from '../components/ErrorBox'
 import { CheckIcon, DownloadIcon, MusicIcon, PauseIcon, PlayIcon } from '../components/Icons'
 import { Page } from '../components/Page'
 import { formatFileSize, formatKoreanDuration } from '../lib/format'
-import { checkSession } from '../store/authStore'
+import { checkSession, useAuthStore } from '../store/authStore'
 import { useEditStore } from '../store/editStore'
 import { useFlowStore } from '../store/flowStore'
 import { clearSession } from '../store/persist'
@@ -19,6 +22,11 @@ export function DonePage() {
   const saveRef = useRef<HTMLAnchorElement>(null)
   /** 확인을 마치고 다시 누른 클릭은 그대로 내려받기 */
   const checked = useRef(false)
+  /** 윈도우 프로그램: 링크 다운로드 대신 다운로드 폴더에 바로 저장 (결정 71) */
+  const desktop = useAuthStore((s) => s.desktop)
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState<(SaveExportResponse & { canReveal: boolean }) | null>(null)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!result) goImport()
@@ -44,6 +52,33 @@ export function DonePage() {
     if (!(await checkSession())) return
     checked.current = true
     saveRef.current?.click()
+  }
+
+  // 다시 누르면 한 벌 더 저장 (서버가 "(2)"를 붙임). 401은 client가 다시 켜기 안내로 (결정 70)
+  async function saveToDownloads() {
+    if (saving || !result) return
+    setSaving(true)
+    setSaveError(null)
+    try {
+      const res = await api.saveExport(result.exportId)
+      setSaved({ ...res, canReveal: true })
+    } catch (e) {
+      setSaveError(toUserMessage(e))
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  // 프로그램을 다시 켜서 기록이 없으면 404 → 버튼만 숨김 (CONTRACT 7-4)
+  async function reveal() {
+    if (!saved) return
+    setSaveError(null)
+    try {
+      await api.revealSaved(saved.savedId)
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 404) setSaved({ ...saved, canReveal: false })
+      else setSaveError(toUserMessage(e))
+    }
   }
 
   function startNew() {
@@ -94,10 +129,31 @@ export function DonePage() {
           />
         </div>
 
-        <a ref={saveRef} className="btn-primary done__save" href={downloadUrl} download={result.fileName} onClick={save}>
-          <DownloadIcon />
-          내 컴퓨터에 저장하기
-        </a>
+        {desktop ? (
+          <button type="button" className="btn-primary done__save" onClick={saveToDownloads} disabled={saving}>
+            <DownloadIcon />
+            내 컴퓨터에 저장하기
+          </button>
+        ) : (
+          <a ref={saveRef} className="btn-primary done__save" href={downloadUrl} download={result.fileName} onClick={save}>
+            <DownloadIcon />
+            내 컴퓨터에 저장하기
+          </a>
+        )}
+
+        {saved && (
+          <div className="done__saved">
+            <p role="status" className="done__saved-text">
+              다운로드 폴더에 「<b>{saved.fileName}</b>」로 저장했어요.
+            </p>
+            {saved.canReveal && (
+              <button type="button" className="btn-outline done__reveal" onClick={reveal}>
+                저장한 곳 열기
+              </button>
+            )}
+          </div>
+        )}
+        {saveError && <ErrorBox message={saveError} className="done__error" />}
 
         {/* 도움말과 같은 창 (결정 47). 와이어프레임의 링크 모양 그대로 */}
         <a
@@ -106,7 +162,7 @@ export function DonePage() {
           aria-haspopup="dialog"
           onClick={(e) => {
             e.preventDefault()
-            useUiStore.getState().openHelp('findSaved')
+            useUiStore.getState().openHelp(desktop ? 'findSavedDesktop' : 'findSaved')
           }}
         >
           저장한 노래는 어디서 찾나요?

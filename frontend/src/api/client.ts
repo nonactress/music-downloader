@@ -4,7 +4,9 @@ import type {
   CreateTrackResponse,
   EditJson,
   Job,
+  MeResponse,
   Peaks,
+  SaveExportResponse,
 } from './types'
 import { ApiError, FALLBACK_ERROR } from './errors'
 import { mockApi } from './mock'
@@ -41,13 +43,16 @@ export interface Api {
   /** CONTRACT 5장 — 쿠키 em_session은 브라우저가 알아서 주고받는다 */
   login(loginId: string, password: string): Promise<AuthResponse>
   logout(): Promise<void>
-  me(): Promise<AuthResponse>
+  me(): Promise<MeResponse>
   createTrack(url: string): Promise<CreateTrackResponse>
   getJob(jobId: string): Promise<Job>
   createExport(edit: EditJson): Promise<CreateExportResponse>
   downloadUrl(exportId: string): string
   audioUrl(trackId: string): string
   getPeaks(trackId: string): Promise<Peaks>
+  /** CONTRACT 7-3 · 7-4 — 윈도우 프로그램만: 다운로드 폴더에 저장 · 파일 탐색기에서 열기 */
+  saveExport(exportId: string): Promise<SaveExportResponse>
+  revealSaved(savedId: string): Promise<void>
 }
 
 const httpApi: Api = {
@@ -64,6 +69,8 @@ const httpApi: Api = {
     `${BASE}/exports/${encodeURIComponent(exportId)}/download`,
   audioUrl: (trackId) => `${BASE}/tracks/${encodeURIComponent(trackId)}/audio`,
   getPeaks: (trackId) => request(`/tracks/${encodeURIComponent(trackId)}/peaks`),
+  saveExport: (exportId) => request(`/exports/${encodeURIComponent(exportId)}/save`, { method: 'POST' }),
+  revealSaved: (savedId) => request(`/desktop/reveal/${encodeURIComponent(savedId)}`, { method: 'POST' }),
 }
 
 /** 백엔드 없이 화면을 볼 때: `npm run dev:mock` */
