@@ -94,6 +94,25 @@ cd backend && ../.venv/bin/pytest        # backend/tests + worker/tests
 - 느린 측정 테스트는 기본 실행에서 빠진다. 최악 경우 렌더링(20분 × 20곡, 약 3분):
   `../.venv/bin/pytest -m slow -s tests/test_render_worst_case.py` (작게: `WORST_TRACKS=4 WORST_MINUTES=5` 앞에 붙이기)
 
+## yt-dlp가 고장 나면 (결정 51)
+
+유튜브가 바뀌면 yt-dlp가 자주 고장 난다. 그래서 `worker/requirements.txt`는 yt-dlp **하한만** 고정하고, worker 이미지를 빌드할 때마다 최신을 받는다.
+
+증상: ② 불러오는 중에서 "노래를 가져오지 못했어요. 잠시 후 다시 시도해 주세요."(`EXTRACT_FAILED`)가 여러 영상에서 계속 나옴. worker 로그에 `ERROR: [youtube] ...`.
+
+1. 지금 버전 확인 — worker가 뜰 때 로그 첫머리에 `yt-dlp 2026.xx.xx`가 찍힌다.
+   ```bash
+   docker compose logs worker | grep "yt-dlp "
+   ```
+2. 새로 빌드해서 다시 띄우기 (작업 중인 추출 · 저장은 실패하고, 사용자는 다시 시도하면 됨)
+   ```bash
+   docker compose build --pull worker && docker compose up -d worker
+   ```
+   `worker/Dockerfile`이 PyPI의 yt-dlp 정보를 받아 오므로, 새 버전이 나와 있으면 캐시와 상관없이 yt-dlp만 새로 받는다 (새 버전이 없으면 캐시 그대로라 빠름).
+3. 그래도 안 되면: 아직 고친 버전이 안 나온 것. [yt-dlp 이슈](https://github.com/yt-dlp/yt-dlp/issues)에서 같은 증상을 찾고, 고친 버전이 나오면 2번을 다시. 이슈에 "deno를 올려라"가 있으면 `worker/Dockerfile`의 `denoland/deno:bin-…` 태그를 올린다.
+
+로컬(Docker 없이)에서는 `.venv/bin/pip install -U "yt-dlp[default]"` 후 worker를 다시 띄운다.
+
 ## 안전장치 (PLAN 12장)
 
 | 항목 | 구현 |

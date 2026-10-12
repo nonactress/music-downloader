@@ -72,3 +72,13 @@ def test_task_timeouts_set():
     assert export.render_export.soft_time_limit == config.EXPORT_TIMEOUT_SEC
     assert extract.extract_track.time_limit > extract.extract_track.soft_time_limit
     assert export.render_export.time_limit > export.render_export.soft_time_limit
+
+
+def test_yt_dlp_only_lower_bound_pinned():
+    """결정 51: yt-dlp는 하한만 고정 (== 금지), 이미지 빌드 때 최신을 받음."""
+    lines = [l.strip() for l in (ROOT / "worker/requirements.txt").read_text().splitlines()
+             if l.strip().startswith("yt-dlp")]
+    assert lines and all(">=" in l and "==" not in l for l in lines)
+    dockerfile = (ROOT / "worker/Dockerfile").read_text()
+    assert "ADD https://pypi.org/pypi/yt-dlp/json" in dockerfile
+    assert dockerfile.index("ADD https://pypi.org/pypi/yt-dlp/json") < dockerfile.index("--upgrade \"yt-dlp[default]\"")
