@@ -6,6 +6,7 @@ import { Page } from '../components/Page'
 import { formatFileSize, formatKoreanDuration } from '../lib/format'
 import { useEditStore } from '../store/editStore'
 import { useFlowStore } from '../store/flowStore'
+import { clearSession } from '../store/persist'
 import { useUiStore } from '../store/uiStore'
 
 export function DonePage() {
@@ -31,6 +32,8 @@ export function DonePage() {
 
   function startNew() {
     useEditStore.getState().reset()
+    useFlowStore.setState({ startedAt: null })
+    clearSession()
     useFlowStore.setState({ lastUrl: '' })
     goImport()
   }
